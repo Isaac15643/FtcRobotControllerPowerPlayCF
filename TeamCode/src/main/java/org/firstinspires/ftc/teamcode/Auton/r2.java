@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Autonomous
 
-public class b1 extends LinearOpMode {
+public class r2 extends LinearOpMode {
     @Override
 
 
