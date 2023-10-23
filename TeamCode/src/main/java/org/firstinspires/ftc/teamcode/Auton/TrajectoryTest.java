@@ -25,20 +25,7 @@ public class TrajectoryTest extends LinearOpMode {
 
         drivetrain.setPoseEstimate(startPose);
 
-//        Trajectory tragic = drivetrain.trajectoryBuilder(startPose)
-//                .lineTo(new Vector2d(-36,-57))
-//                        .build();
         TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(startPose)
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-//                .lineTo(new Vector2d(-36,-27))
-//                .lineTo(new Vector2d(-36,-27))
                 .splineTo(new Vector2d(-58,12),Math.toRadians(180))
 //                .turn(Math.toRadians(0))
                 .build();
