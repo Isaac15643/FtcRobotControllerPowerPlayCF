@@ -47,6 +47,13 @@ public class TeleOpFieldOriented extends LinearOpMode {
     public double headingError = 0;
     boolean highConeDrop = true;
 
+    private boolean dPadUpIsPressed = false;
+    private boolean dPadDownIsPressed = false;
+    private boolean dPadLeftIsPressed = false;
+    private boolean dPadRightIsPressed = false;
+    private int scoreY = 0; //vertical scoring position
+    private int scoreX = 0; //horizontal scoring position
+
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
 
@@ -179,9 +186,28 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
             }
 
-            //run a servo CW
+            //set scoring position
             if (gamepad2.dpad_up) {
-                Back.setPosition(1);
+                dPadUpIsPressed = true;
+            }
+            if (gamepad2.dpad_up != dPadUpIsPressed) {
+                if (scoreY > 2) {
+                    scoreY = 3;
+                }
+                else {
+                    scoreY += 1;
+                }
+            }
+            if (gamepad2.dpad_down) {
+                dPadDownIsPressed = true;
+            }
+            if (gamepad2.dpad_down != dPadDownIsPressed) {
+                if (scoreY < 1) {
+                    scoreY = 0;
+                }
+                else {
+                    scoreY -= 1;
+                }
             }
 
             //run a servo CCW

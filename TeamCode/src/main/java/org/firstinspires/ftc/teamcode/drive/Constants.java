@@ -59,17 +59,11 @@ import java.util.ArrayList;
  * Please read the explanations in that Sample about how to use this class definition.
  *
  * This file defines a Java Class that performs all the setup and configuration for a sample robot's hardware (motors and sensors).
- * It assumes three motors (left_drive, right_drive and arm) and two servos (left_hand and right_hand)
  *
  * This one file/class can be used by ALL of your OpModes without having to cut & paste the code each time.
  *
  * Where possible, the actual hardware objects are "abstracted" (or hidden) so the OpMode code just makes calls into the class,
  * rather than accessing the internal hardware directly. This is why the objects are declared "private".
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with *exactly the same name*.
- *
- * Or.. In OnBot Java, add a new file named RobotHardware.java, drawing from this Sample; select Not an OpMode.
- * Also add a new OpMode, drawing from the Sample ConceptExternalHardwareClass.java; select TeleOp.
  *
  */
 
@@ -136,7 +130,6 @@ public class Constants {
     public static RevHubOrientationOnRobot.UsbFacingDirection USB_FACING_DIR =
             RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
-
     public static double encoderTicksToInches(double ticks) {
         return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / TICKS_PER_REV;
     }
@@ -156,20 +149,31 @@ public class Constants {
     public Constants(TeleOpFieldOriented opmode) {
         controlFreaks = opmode;
     }
+    public Constants(RobotAutoDriveToAprilTagOmni robotAutoDriveToAprilTagOmni) {
+    }
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    public DcMotor leftFront  = null;
-    DcMotor rightFront = null;
-    DcMotor rightRear  = null;
-    DcMotor leftRear   = null;
-    DcMotor slide_motor         = null;
-    public BNO055IMU imu       = null;      // Control/Expansion Hub IMU
-    Servo Back                  = null;
-    Servo Front                 = null;
+    DcMotor leftFront         = null;
+    DcMotor rightFront        = null;
+    DcMotor rightRear         = null;
+    DcMotor leftRear          = null;
+    DcMotor slide_motor       = null; //deploys and retracts the elevator
+    DcMotor e_tilt            = null; //controls the tilt angle of the elevator
+
+    public BNO055IMU imu      = null;      // Control/Expansion Hub IMU
+
+    Servo claw                = null; //Claw servo
+    Servo p_tilt              = null; //controls the tilt angle of the pixel delivery (claw)
+    Servo drone               = null; //release the drone
+
+    DigitalChannel p_tilt_stop;  // Touch sensor for tilt of claw (pixel)
+    DigitalChannel e_tilt_stop;  // Touch sensor for tilt of elevator
+    DigitalChannel e_stop;  // Touch sensor for lower limit of elevator
 
     private double robotHeading  = 0;
     private double headingOffset = 0;
     private double headingError  = 0;
+
 
     int slideTopPosition = 3400;
     int slideMiddlePosition = 2450;
@@ -214,7 +218,7 @@ public class Constants {
 
     static final double FEET_PER_METER = 3.28084;
 
-    DigitalChannel touch;  // Hardware Device Object
+
 
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -244,21 +248,29 @@ public class Constants {
      * All of the hardware devices are accessed via the hardware map, and initialized.
      */
     public void init()    {
-        // Define and Initialize Motors (note: need to use reference to actual OpMode).
-        leftFront = controlFreaks.hardwareMap.get(DcMotor.class, "leftFront");
-        rightFront = controlFreaks.hardwareMap.get(DcMotor.class, "rightFront");
-        leftRear = controlFreaks.hardwareMap.get(DcMotor.class, "leftRear");
-        rightRear = controlFreaks.hardwareMap.get(DcMotor.class, "rightRear");
+        // Initialize Motors (note: need to use reference to actual OpMode).
+        leftFront   = controlFreaks.hardwareMap.get(DcMotor.class, "leftFront");
+        rightFront  = controlFreaks.hardwareMap.get(DcMotor.class, "rightFront");
+        leftRear    = controlFreaks.hardwareMap.get(DcMotor.class, "leftRear");
+        rightRear   = controlFreaks.hardwareMap.get(DcMotor.class, "rightRear");
         slide_motor = controlFreaks.hardwareMap.get(DcMotor.class, "slide_motor");
-//        Back = myOpMode.hardwareMap.get(Servo.class, "Back");
-//        Front = myOpMode.hardwareMap.get(Servo.class, "Front");
-//        touch = myOpMode.hardwareMap.get(DigitalChannel.class, "touch");
-//        touch.setMode(DigitalChannel.Mode.INPUT);
-
+        e_tilt      = controlFreaks.hardwareMap.get(DcMotor.class, "e_tilt");
+        // Set motor directions
         leftFront.setDirection(DcMotor.Direction.FORWARD);
         leftRear.setDirection(DcMotor.Direction.FORWARD);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
+
+
+        // Initialize Servos
+        claw        = controlFreaks.hardwareMap.get(Servo.class, "claw");
+        p_tilt      = controlFreaks.hardwareMap.get(Servo.class, "e_tilt");
+        drone       = controlFreaks.hardwareMap.get(Servo.class, "drone");
+
+        // Initialize Touch Sensors
+        p_tilt_stop.setMode(DigitalChannel.Mode.INPUT); //limit switch for the tilting pixel delivery
+        e_tilt_stop.setMode(DigitalChannel.Mode.INPUT); //limit switch for the elevator tilt
+        e_stop.setMode(DigitalChannel.Mode.INPUT); //limit switch for the elevator extension
 
         // define initialization values for IMU, and then initialize it.
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -406,19 +418,20 @@ public class Constants {
 
     // **********  LOW Level driving functions.  ********************
 
-    public void Intake(){
-        Back.setPosition(0);
-        Front.setPosition(1);
+    public void clawCollect(){ //Close the claw
+        claw.setPosition(0);
     }
 
-    public void Output(){
-        Back.setPosition(1);
-        Front.setPosition(0);
+    public void clawRelease(){ //Open the claw
+        claw.setPosition(1);
     }
 
-    public void ServoOff(){
-        Back.setPosition(.5);
-        Front.setPosition(.5);
+    public void p_tiltCollect(){ //set the pixel tilt to the collect position
+        p_tilt.setPosition(0);
+    }
+
+    public void p_tiltScore(){ //set the pixel tilt to the scoring position
+        p_tilt.setPosition(1);
     }
 
 //    public void getCone() {
