@@ -40,22 +40,76 @@ public class b1 extends LinearOpMode {
 
 
         //go to backdrop, drop pixels, and park
-        TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineTo(new Vector2d(-36,36))
+        TrajectorySequence tragiccenter = drivetrain.trajectorySequenceBuilder(startPose)
+                .lineTo(new Vector2d(-36,32))
                 .waitSeconds(2.5)
-                .lineToSplineHeading(new Pose2d(-36,45,Math.toRadians(0)))
-//                                .splineTo(new Vector2d(12,58),Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(18,58),Math.toRadians(0))
-                .lineToLinearHeading(new Pose2d(50,36,Math.toRadians(180)))
-                .splineTo(new Vector2d(38,7),Math.toRadians(180))
-                .splineTo(new Vector2d(-62,12),Math.toRadians(180))
+                .splineTo(new Vector2d(-28,8),Math.toRadians(0))
+                .lineTo(new Vector2d(-10,8))
+                .lineTo(new Vector2d(28,20))
+                .lineToLinearHeading(new Pose2d(50,33,Math.toRadians(180)))
+                .waitSeconds(2.5)
+                .lineTo(new Vector2d(22,8))
+                .lineTo(new Vector2d(-10,8))
+                .lineTo(new Vector2d(-58,10))
+                .waitSeconds(2.5)
+                .back(5)
+                .lineTo(new Vector2d(50,13))
 
-                        .build();
+                .build();
+
+
+
+
+//        TrajectorySequence tragicright = drivetrain.trajectorySequenceBuilder(startPose)
+//                .lineTo(new Vector2d(-36,32))
+//                .turn(Math.toRadians(-90))
+//                .waitSeconds(2.5)
+//                .splineTo(new Vector2d(-28,10),Math.toRadians(0))
+//                .splineTo(new Vector2d(-10,8),Math.toRadians(0))
+//                .splineTo(new Vector2d(22,20),Math.toRadians(0))
+//                .lineToLinearHeading(new Pose2d(50,36,Math.toRadians(180)))
+//                .waitSeconds(2.5)
+//                .splineTo(new Vector2d(22,10),Math.toRadians(180))
+//                .splineTo(new Vector2d(-10,8),Math.toRadians(180))
+//                .splineTo(new Vector2d(-57,13),Math.toRadians(180))
+//                .waitSeconds(2.5)
+//                .back(5)
+//                .splineTo(new Vector2d(-10,8),Math.toRadians(0))
+//                .splineTo(new Vector2d(22,10),Math.toRadians(0))
+//                .splineTo(new Vector2d(60,13),Math.toRadians(0))
+//
+//
+//                .build();
+
+
+
+        //        TrajectorySequence tragicleft = drivetrain.trajectorySequenceBuilder(startPose)
+//                .lineTo(new Vector2d(-36,32))
+//                .turn(Math.toRadians(-90))
+//                .waitSeconds(2.5)
+//                .splineTo(new Vector2d(-28,10),Math.toRadians(0))
+//                .splineTo(new Vector2d(-10,8),Math.toRadians(0))
+//                .splineTo(new Vector2d(22,20),Math.toRadians(0))
+//                .lineToLinearHeading(new Pose2d(50,36,Math.toRadians(180)))
+//                .waitSeconds(2.5)
+//                .splineTo(new Vector2d(22,10),Math.toRadians(180))
+//                .splineTo(new Vector2d(-10,8),Math.toRadians(180))
+//                .splineTo(new Vector2d(-57,13),Math.toRadians(180))
+//                .waitSeconds(2.5)
+//                .back(5)
+//                .splineTo(new Vector2d(-10,8),Math.toRadians(0))
+//                .splineTo(new Vector2d(22,10),Math.toRadians(0))
+//                .splineTo(new Vector2d(60,13),Math.toRadians(0))
+//
+//
+//                .build();
 
         waitForStart();
 
         if (!isStopRequested()) {
-            drivetrain.followTrajectorySequence(tragic);
+            drivetrain.followTrajectorySequence(tragiccenter);
+//            drivetrain.followTrajectorySequence(tragicright);
+            //  drivetrain.followTrajectorySequence(tragicleft);
 
 
         }
