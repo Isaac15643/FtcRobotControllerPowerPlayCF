@@ -264,7 +264,7 @@ public class Constants {
 
         // Initialize Servos
         claw        = controlFreaks.hardwareMap.get(Servo.class, "claw");
-        p_tilt      = controlFreaks.hardwareMap.get(Servo.class, "e_tilt");
+        p_tilt      = controlFreaks.hardwareMap.get(Servo.class, "p_tilt");
         drone       = controlFreaks.hardwareMap.get(Servo.class, "drone");
 
         // Initialize Touch Sensors

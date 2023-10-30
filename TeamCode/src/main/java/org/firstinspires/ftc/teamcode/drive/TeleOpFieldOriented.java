@@ -51,8 +51,8 @@ public class TeleOpFieldOriented extends LinearOpMode {
     private boolean dPadDownIsPressed = false;
     private boolean dPadLeftIsPressed = false;
     private boolean dPadRightIsPressed = false;
-    private int scoreY = 0; //vertical scoring position
-    private int scoreX = 0; //horizontal scoring position
+    private int scoreY = 1; //vertical scoring position
+    private int scoreX = 1; //horizontal scoring position
 
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
@@ -97,6 +97,8 @@ public class TeleOpFieldOriented extends LinearOpMode {
             /* Adjust Joystick X/Y inputs by navX MXP yaw angle */
             angles = constants.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             float gyro_degrees = (angles.firstAngle) - (float) headingOffset;
+            telemetry.addData("Score X", scoreX);
+            telemetry.addData("Score Y", scoreY);
             telemetry.addData("Yaw", ("%.3f"), gyro_degrees);
             telemetry.addData("Left X", ("%.3f"), gamepad1.left_stick_x);
             telemetry.addData("Right X", ("%.3f"), gamepad2.right_stick_x);
@@ -188,26 +190,51 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
             //set scoring position
             if (gamepad2.dpad_up) {
-                dPadUpIsPressed = true;
-            }
-            if (gamepad2.dpad_up != dPadUpIsPressed) {
-                if (scoreY > 2) {
-                    scoreY = 3;
+                if (!dPadUpIsPressed) {
+                    scoreY++;
+                    if (scoreY > 4) {
+                        scoreY = 4;
+                    }
+                    dPadUpIsPressed = true;
                 }
-                else {
-                    scoreY += 1;
-                }
+            } else {
+                dPadUpIsPressed = false;
             }
+
             if (gamepad2.dpad_down) {
-                dPadDownIsPressed = true;
+                if (!dPadDownIsPressed) {
+                    scoreY--;
+                    if (scoreY < 1) {
+                        scoreY = 1;
+                    }
+                    dPadDownIsPressed = true;
+                }
+            } else {
+                dPadDownIsPressed = false;
             }
-            if (gamepad2.dpad_down != dPadDownIsPressed) {
-                if (scoreY < 1) {
-                    scoreY = 0;
+
+            if (gamepad2.dpad_left) {
+                if (!dPadLeftIsPressed) {
+                    scoreX--;
+                    if (scoreX < 1) {
+                        scoreX = 1;
+                    }
+                    dPadLeftIsPressed = true;
                 }
-                else {
-                    scoreY -= 1;
+            } else {
+                dPadLeftIsPressed = false;
+            }
+
+            if (gamepad2.dpad_right) {
+                if (!dPadRightIsPressed) {
+                    scoreX++;
+                    if (scoreX > 3) {
+                        scoreX = 3;
+                    }
+                    dPadRightIsPressed = true;
                 }
+            } else {
+                dPadRightIsPressed = false;
             }
 
             //run a servo CCW
@@ -230,6 +257,12 @@ public class TeleOpFieldOriented extends LinearOpMode {
             }
 
             if (gamepad2.x) {
+                constants.clawCollect();
+
+            }
+
+            if (gamepad2.b) {
+                constants.clawRelease();
 
             }
 
@@ -259,8 +292,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
     }
     public void Intake(){
-        Back.setPosition(0);
-        Front.setPosition(1);
+        constants.clawCollect();
     }
     public void Output(){
         Back.setPosition(1);
