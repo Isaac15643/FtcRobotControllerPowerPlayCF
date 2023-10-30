@@ -13,8 +13,13 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 public class b1 extends LinearOpMode {
     @Override
 
-
     public void runOpMode() throws InterruptedException {
+
+        int teamMarker = 0; //variable for the location of team marker (1,2,3 = L, C, R)
+
+        //Establish AprilTag detection
+
+
         //Instantiate the drive system
         MecanumDrive drivetrain = new MecanumDrive(hardwareMap);
 
@@ -24,7 +29,7 @@ public class b1 extends LinearOpMode {
         //Occupy the initial pose
         drivetrain.setPoseEstimate(startPose);
 
-        //read april tags
+        //read Team Marker Position
 
 
         //drive to pixel drop
@@ -43,17 +48,17 @@ public class b1 extends LinearOpMode {
         TrajectorySequence tragiccenter = drivetrain.trajectorySequenceBuilder(startPose)
                 .lineTo(new Vector2d(-36,32))
                 .waitSeconds(2.5)
-                .splineTo(new Vector2d(-28,8),Math.toRadians(0))
-                .lineTo(new Vector2d(-10,8))
+                .splineTo(new Vector2d(-28,0),Math.toRadians(0))
+                .lineTo(new Vector2d(-10,0))
                 .lineTo(new Vector2d(28,20))
                 .lineToLinearHeading(new Pose2d(50,33,Math.toRadians(180)))
                 .waitSeconds(2.5)
-                .lineTo(new Vector2d(22,8))
-                .lineTo(new Vector2d(-10,8))
+                .lineTo(new Vector2d(22,0))
+                .lineTo(new Vector2d(-10,0))
                 .lineTo(new Vector2d(-58,10))
                 .waitSeconds(2.5)
                 .back(5)
-                .lineTo(new Vector2d(50,13))
+                .lineTo(new Vector2d(50,0))
 
                 .build();
 
