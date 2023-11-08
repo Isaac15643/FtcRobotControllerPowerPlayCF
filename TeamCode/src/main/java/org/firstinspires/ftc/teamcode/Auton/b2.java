@@ -5,13 +5,18 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.drive.Commands;
+import org.firstinspires.ftc.teamcode.drive.Constants;
 import org.firstinspires.ftc.teamcode.drive.MecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Autonomous
 
 public class b2 extends LinearOpMode {
-    @Override
+//    @Override
+    public Constants constants;
+    public Commands commands;
+    private TrajectorySequence chosenSequence;
 
 
     public void runOpMode() throws InterruptedException {
@@ -24,23 +29,44 @@ public class b2 extends LinearOpMode {
         //Occupy the initial pose
         drivetrain.setPoseEstimate(startPose);
 
-        //read april tags
+        //TODO: Build contingency sequences
+        TrajectorySequence Left = drivetrain.trajectorySequenceBuilder(startPose)
+                .lineTo(new Vector2d(-36,36))
+                .build();
 
+        TrajectorySequence Center = drivetrain.trajectorySequenceBuilder(startPose)
+                .lineTo(new Vector2d(-36,36))
+                .build();
 
-        //drive to pixel drop
+        TrajectorySequence Right = drivetrain.trajectorySequenceBuilder(startPose)
+                .lineTo(new Vector2d(-36,36))
+                .build();
 
+        //Make a variable for the ending pose of each of the contingencies
+        Pose2d newPose = null; //null for now, we'll give it a value later
 
-        //drop pixel
+        //Init the aprilTag pipeline
+        commands.initAprilTag();
 
+        //read april tags (during init)
+        commands.runAprilTag();
 
-        //drive to backdrop
+        //TODO: Establish which sequence we will run based on aprilTag bearing
+        if(commands.aprilTagLocation > 2) {
+            newPose = Left.end(); // newPose is the end of the first sequence
+            chosenSequence = Left;
 
+        } else if (commands.aprilTagLocation < 2){
+            newPose = Right.end();
+            chosenSequence = Right;
 
-        //drive to pixel stack, pick up pixels
+        } else {
+            newPose = Center.end();
+            chosenSequence = Center;
+        }
 
-
-        //go to backdrop, drop pixels, and park
-        TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(startPose)
+        // Build the sequences we will run after dropping the first pixel
+        TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(newPose)
                 .lineTo(new Vector2d(-36,36))
                 .waitSeconds(2.5)
                 .lineToSplineHeading(new Pose2d(-36,45,Math.toRadians(0)))
@@ -55,9 +81,9 @@ public class b2 extends LinearOpMode {
         waitForStart();
 
         if (!isStopRequested()) {
+
+            drivetrain.followTrajectorySequence(chosenSequence);
             drivetrain.followTrajectorySequence(tragic);
-
-
         }
     }
 }
