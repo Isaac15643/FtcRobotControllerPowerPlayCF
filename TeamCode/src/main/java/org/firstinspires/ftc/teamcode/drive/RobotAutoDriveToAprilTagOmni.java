@@ -29,7 +29,6 @@
 
 package org.firstinspires.ftc.teamcode.drive;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -91,11 +90,7 @@ import java.util.concurrent.TimeUnit;
 public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
 {
     // Adjust these numbers to suit your robot.
-    Constants constants = new Constants(this);
-
-
-
-    final double DESIRED_DISTANCE = 12.0; //  this is how close the camera should get to the target (inches)
+    final double DESIRED_DISTANCE = 2.0; //  this is how close the camera should get to the target (inches)
 
     //  Set the GAIN constants to control the relationship between the measured position error, and how much power is
     //  applied to the drive motors to correct the error.
@@ -121,11 +116,6 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
 
     @Override public void runOpMode()
     {
-        constants.init();
-        telemetry.update();
-        constants.DRIVE_SPEED = 0.75;
-        constants.TURN_SPEED = 0.50;
-
         boolean targetFound     = false;    // Set to true when an AprilTag target is detected
         double  drive           = 0;        // Desired forward power/speed (-1 to +1)
         double  strafe          = 0;        // Desired strafe power/speed (-1 to +1)
@@ -133,6 +123,22 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
 
         // Initialize the Apriltag Detection process
         initAprilTag();
+
+        // Initialize the hardware variables. Note that the strings used here as parameters
+        // to 'get' must match the names assigned during the robot configuration.
+        // step (using the FTC Robot Controller app on the phone).
+        leftFrontDrive  = hardwareMap.get(DcMotor.class, "leftfront_drive");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "rightfront_drive");
+        leftBackDrive  = hardwareMap.get(DcMotor.class, "leftback_drive");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "rightback_drive");
+
+        // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
+        // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
+        // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         if (USE_WEBCAM)
             setManualExposure(6, 250);  // Use low exposure time to reduce motion blur
@@ -223,26 +229,26 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
         // Calculate wheel powers.
         double leftFrontPower    =  x -y -yaw;
         double rightFrontPower   =  x +y +yaw;
-        double leftRearPower     =  x +y -yaw;
-        double rightRearPower    =  x -y +yaw;
+        double leftBackPower     =  x +y -yaw;
+        double rightBackPower    =  x -y +yaw;
 
         // Normalize wheel powers to be less than 1.0
         double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
-        max = Math.max(max, Math.abs(leftRearPower));
-        max = Math.max(max, Math.abs(rightRearPower));
+        max = Math.max(max, Math.abs(leftBackPower));
+        max = Math.max(max, Math.abs(rightBackPower));
 
         if (max > 1.0) {
             leftFrontPower /= max;
             rightFrontPower /= max;
-            leftRearPower /= max;
-            rightRearPower /= max;
+            leftBackPower /= max;
+            rightBackPower /= max;
         }
 
         // Send powers to the wheels.
-        constants.leftFront.setPower(leftFrontPower);
-        constants.rightFront.setPower(rightFrontPower);
-        constants.leftRear.setPower(leftRearPower);
-        constants.rightRear.setPower(rightRearPower);
+        leftFrontDrive.setPower(leftFrontPower);
+        rightFrontDrive.setPower(rightFrontPower);
+        leftBackDrive.setPower(leftBackPower);
+        rightBackDrive.setPower(rightBackPower);
     }
 
     /**

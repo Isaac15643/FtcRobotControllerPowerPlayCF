@@ -4,6 +4,7 @@
 
 package org.firstinspires.ftc.teamcode.drive;
 
+import com.acmerobotics.roadrunner.control.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -24,19 +25,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 public class TeleOpFieldOriented extends LinearOpMode {
 
     Constants constants = new Constants(this);
+    Commands commands;
 
     // State used for updating telemetry
     Orientation angles;
 
-//    private DcMotor leftFront = null;
-//    private DcMotor rightFront = null;
-//    private DcMotor rightRear = null;
-//    private DcMotor leftRear = null;
-//    private DcMotor slide_motor = null;
-    private Servo Back;
-    private Servo Front;
-    private DigitalChannel touch;
-    private DigitalChannel slide_zero;
     private double left_front_power;
     private double right_front_power;
     private double left_rear_power;
@@ -45,7 +38,6 @@ public class TeleOpFieldOriented extends LinearOpMode {
     public double headingOffset = 0;
     public double robotHeading = 0;
     public double headingError = 0;
-    boolean highConeDrop = true;
 
     private boolean dPadUpIsPressed = false;
     private boolean dPadDownIsPressed = false;
@@ -53,6 +45,9 @@ public class TeleOpFieldOriented extends LinearOpMode {
     private boolean dPadRightIsPressed = false;
     private int scoreY = 1; //vertical scoring position
     private int scoreX = 1; //horizontal scoring position
+
+
+
 
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
@@ -72,8 +67,10 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
         constants.init();
         telemetry.update();
-        constants.DRIVE_SPEED = 0.75;
+        constants.DRIVE_SPEED = 0.5;
         constants.TURN_SPEED = 0.50;
+
+
 
         double driveTurn;
         double gamepadXCoordinate;
@@ -95,11 +92,14 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
 
             /* Adjust Joystick X/Y inputs by navX MXP yaw angle */
-            angles = constants.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            angles = constants.imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+//            angles = constants.imu.getRobotYawPitchRollAngles();
             float gyro_degrees = (angles.firstAngle) - (float) headingOffset;
             telemetry.addData("Score X", scoreX);
             telemetry.addData("Score Y", scoreY);
             telemetry.addData("Yaw", ("%.3f"), gyro_degrees);
+            telemetry.addData("e_tilt", constants.e_tilt.getCurrentPosition());
+            telemetry.addData("slide_motor", constants.slide_motor.getCurrentPosition());
             telemetry.addData("Left X", ("%.3f"), gamepad1.left_stick_x);
             telemetry.addData("Right X", ("%.3f"), gamepad2.right_stick_x);
             telemetry.addData("Right Y", ("%.3f"), gamepad2.right_stick_y);
@@ -112,7 +112,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
             telemetry.addData("RR POWER", ("%.3f"), right_rear_power);
             telemetry.addData("LF POWER", ("%.3f"), left_front_power);
             telemetry.addData("LR POWER", ("%.3f"), left_rear_power);
-            telemetry.addData("Slide", "%7d", constants.slide_motor.getCurrentPosition());
+
 
             driveTurn = -gamepad1.left_stick_x;
             gamepadXCoordinate = gamepad1.right_stick_x; //this simply gives our x value relative to the driver
@@ -153,7 +153,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
             if (gamepad1.left_bumper) { // slow down for precision
                 constants.DRIVE_SPEED = 0.25;
             } else {
-                constants.DRIVE_SPEED = 0.75;
+                constants.DRIVE_SPEED = 1.0;
             }
 
             //Spin 180 degrees
@@ -163,29 +163,70 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
             //Reset Heading
             while (gamepad1.right_bumper) {
-                resetHeading();
+                constants.resetHeading();
             }
 
             //*****************************     Gamepad 2     **************************************
-            //run a motor forward
-            if (gamepad2.a) {
-                constants.slide_motor.setPower(1);
-            }
-            else {constants.slide_motor.setPower(0);}
-
-           //run a motor backward
+            //
             if (gamepad2.b) {
-                constants.slide_motor.setPower(-1);
-            }
-            else {constants.slide_motor.setPower(0);}
-
-
-            if (gamepad2.right_stick_y < -0.65) { //move slide manually
+                constants.claw.setPosition(.5);
 
             }
 
-            if (gamepad2.right_stick_y > 0.65) { //move slide manually
 
+
+            int e_tiltPickUp = 270; //The tilt position for picking up a pixel
+            int e_tiltStowed = 0; //The tilt position for moving across the field
+            double p_tiltPickup = 0; //The tilt position of the claw mechanism for picking up a pixel
+            double p_tiltScore = 0.75; //The tilt position of the claw mechanism for scoring a pixel
+            int slidePickup = -160;
+            int slideLow = -1300;
+            int slideMed = -1900;
+            int slideHigh = -2600;
+            int slideTop = -3100;
+            int e_tiltPickup = 270;
+
+            if (gamepad2.a) {
+                // set slide extension to pickup position
+                constants.e_tilt.setTargetPosition(slidePickup);
+                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                constants.e_tilt.setPower(0.5);
+
+                // set elevator tilt and pixel tilt to pickup position (90 deg vertical)
+                constants.e_tilt.setTargetPosition((e_tiltPickUp));
+                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                constants.e_tilt.setPower(0.5);
+                constants.p_tilt.setPosition(0);
+                constants.claw.setPosition(1);
+
+//drop elevator down to get pixel
+                constants.slide_motor.setTargetPosition(0);
+
+                //Close the claw
+                constants.claw.setPosition(0);
+
+                // set elevator tilt position to stowed position
+                constants.e_tilt.setTargetPosition(e_tiltStowed);            } else {}
+
+           //Pickup a pixel
+            if (gamepad2.y) {
+//            constants.getPixel();
+                constants.clawCollect();
+            } else {}
+
+
+            if (gamepad2.right_stick_y < -0.2 || gamepad2.right_stick_y > 0.2) { //move slide manually
+                constants.slide_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                constants.slide_motor.setPower(gamepad2.right_stick_y);
+            } else {
+//                constants.slide_motor.setPower(0);
+            }
+
+            if (gamepad2.left_stick_y < -0.2 || gamepad2.left_stick_y > 0.2) { //tilt elevator manually
+                constants.e_tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                constants.e_tilt.setPower(gamepad2.left_stick_y * 0.5);
+            } else {
+//                constants.e_tilt.setPower(0);
             }
 
             //set scoring position
@@ -237,35 +278,14 @@ public class TeleOpFieldOriented extends LinearOpMode {
                 dPadRightIsPressed = false;
             }
 
-            //run a servo CCW
-            if (gamepad2.dpad_down) {
-                Back.setPosition(0);
-            }
 
-            if (gamepad2.dpad_right) {
-
-            }
-
-            if (gamepad2.dpad_left) {
-
-            }
-
-            if (gamepad2.right_bumper) { //run slide down manually
-
-            } else {
-
-            }
+            if (gamepad2.right_bumper) {} else {}
 
             if (gamepad2.x) {
-                constants.clawCollect();
+                constants.claw.setPosition(0);
 
-            }
-
-            if (gamepad2.b) {
-                constants.clawRelease();
-
-            }
-
+            } else {}
+            
             telemetry.update();
 
         } //End of while op mode is active
@@ -291,22 +311,12 @@ public class TeleOpFieldOriented extends LinearOpMode {
         constants.leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
     }
-    public void Intake(){
-        constants.clawCollect();
-    }
-    public void Output(){
-        Back.setPosition(1);
-        Front.setPosition(0);
-    }
-    public void ServoOff(){
-        Back.setPosition(.5);
-        Front.setPosition(.5);
-    }
 
-    public double getRawHeading() {
-        Orientation angles   = constants.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        return angles.firstAngle;
-    }
+
+//    public double getRawHeading() {
+//        Orientation angles   = constants.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+//        return angles.firstAngle;
+//    }
 
     /**
      * Reset the "offset" heading back to zero
