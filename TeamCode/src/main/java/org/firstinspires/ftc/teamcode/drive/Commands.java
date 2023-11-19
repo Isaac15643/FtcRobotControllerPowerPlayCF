@@ -39,12 +39,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
-import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Commands {
@@ -53,6 +51,11 @@ public class Commands {
 
     // Define a constructor that allows the OpMode to pass a reference to itself.
     private Constants constants;
+    /* Declare OpMode members. */
+    // Define a constructor that allows the OpMode to pass a reference to itself.
+    public Commands (TeleOpFieldOriented opmode) {
+        controlFreaks = opmode;
+    }
 
     private int scoreYExtension; //the encoder value for each of the scoring positions: L, M, H, T(Top)
     private int e_tiltPickUp = 270; //The tilt position for picking up a pixel

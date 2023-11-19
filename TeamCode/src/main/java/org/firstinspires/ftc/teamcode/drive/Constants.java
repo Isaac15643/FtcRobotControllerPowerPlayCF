@@ -33,43 +33,24 @@ import static java.lang.Thread.sleep;
 
 import android.annotation.SuppressLint;
 
-import com.qualcomm.hardware.bosch.BHI260IMU;
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.Subsystems.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.apriltag.AprilTagDetection;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-
-import java.util.ArrayList;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-
-import java.util.List;
 
 
 /**
@@ -159,20 +140,21 @@ public class Constants {
     /* Declare OpMode members. */
     private LinearOpMode controlFreaks = null;   // gain access to methods in the calling OpMode.
     // Define a constructor that allows the OpMode to pass a reference to itself.
-    public Constants(TeleOpFieldOriented opmode) {
-        controlFreaks = opmode;
-    }
+    public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;}
     public Commands commands;
+    public Constants(Utilities utilities) {controlFreaks = utilities;}
+    public void ConceptAprilTag (TeleOpFieldOriented opmode) { controlFreaks = opmode;}
 
 
-    // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
+
+        // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
     DcMotor leftFront         = null;
     DcMotor rightFront        = null;
     DcMotor rightRear         = null;
     DcMotor leftRear          = null;
     DcMotor slide_motor       = null; //deploys and retracts the elevator
     DcMotor e_tilt            = null; //controls the tilt angle of the elevator
-
+    DcMotor hanger            = null;
 //    public BNO055IMU imu      = null;      // Control/Expansion Hub IMU
 //    public BHI260IMU imu      = null;
     YawPitchRollAngles orientation;
@@ -282,14 +264,22 @@ private static final boolean USE_WEBCAM = true;  // true for webcam, false for p
         rightRear   = controlFreaks.hardwareMap.get(DcMotor.class, "rightRear");
         slide_motor = controlFreaks.hardwareMap.get(DcMotor.class, "slide_motor");
         e_tilt      = controlFreaks.hardwareMap.get(DcMotor.class, "e_tilt");
+        hanger      = controlFreaks.hardwareMap.get(DcMotor.class,"hanger");
 
         e_tilt.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        e_tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        e_tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        e_tilt.setPower(0.5);
+
+        hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hanger.setPower(1.0);
 //
         slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        slide_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        slide_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        slide_motor.setPower(1.0);
+
+
 
         // Set motor directions
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -302,6 +292,8 @@ private static final boolean USE_WEBCAM = true;  // true for webcam, false for p
         claw        = controlFreaks.hardwareMap.get(Servo.class, "claw");
         p_tilt      = controlFreaks.hardwareMap.get(Servo.class, "p_tilt");
         drone       = controlFreaks.hardwareMap.get(Servo.class, "drone");
+        claw.setPosition(1);
+        p_tilt.setPosition(0);
 
         // Initialize Touch Sensors
 //        p_tilt_stop.setMode(DigitalChannel.Mode.INPUT); //limit switch for the tilting pixel delivery
@@ -329,11 +321,6 @@ private static final boolean USE_WEBCAM = true;  // true for webcam, false for p
         controlFreaks.telemetry.update();
     }
 
-public void setElevatorTilt(int targetPosition){
-    e_tilt.setTargetPosition(targetPosition);
-    e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-}
 
 //    public void runAprilTag(){
 //        int cameraMonitorViewId = controlFreaks.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", controlFreaks.hardwareMap.appContext.getPackageName());
@@ -469,37 +456,6 @@ public void setElevatorTilt(int targetPosition){
     }
 
     // **********  LOW Level driving functions.  ********************
-
-    public void clawCollect(){ //Close the claw
-        claw.setPosition(0);
-    }
-
-    public void clawRelease(){ //Open the claw
-        claw.setPosition(1);
-    }
-
-    public void p_tiltCollect(){ //set the pixel tilt to the collect position
-        p_tilt.setPosition(0);
-    }
-
-    public void p_tiltScore(){ //set the pixel tilt to the scoring position
-        p_tilt.setPosition(1);
-    }
-
-    public void getPixel(){
-        // set slide extension to pickup position
-        slide_motor.setTargetPosition(scoreYExtension);
-
-        // set elevator tilt and pixel tilt to pickup position (90 deg vertical)
-        e_tilt.setTargetPosition((e_tiltPickUp));
-        p_tilt.setPosition(p_tiltPickup);
-
-        //Close the claw
-        clawCollect();
-
-        // set elevator tilt position to stowed position
-        e_tilt.setTargetPosition(e_tiltStowed);
-    }
 
 
 //    public void getCone() {
