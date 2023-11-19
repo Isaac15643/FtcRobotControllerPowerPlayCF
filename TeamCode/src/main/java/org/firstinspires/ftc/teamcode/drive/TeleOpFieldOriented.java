@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /*********************************************/
 
@@ -45,6 +46,9 @@ public class TeleOpFieldOriented extends LinearOpMode {
     private boolean dPadRightIsPressed = false;
     private int scoreY = 1; //vertical scoring position
     private int scoreX = 1; //horizontal scoring position
+    int state = 0;
+    int slideOldPosition = 20;
+    int slideNewPosition = 0;
 
 
 
@@ -69,8 +73,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
         telemetry.update();
         constants.DRIVE_SPEED = 0.5;
         constants.TURN_SPEED = 0.50;
-
-
+        YawPitchRollAngles orientation;
 
         double driveTurn;
         double gamepadXCoordinate;
@@ -83,6 +86,16 @@ public class TeleOpFieldOriented extends LinearOpMode {
         double gamepadXControl = 0;
         double gamepadYControl = 0;
 
+        boolean pickingUp = false;
+
+
+        int slideTarget = 0;
+        int e_tiltTarget = 0;
+        int hangerTarget = 0;
+
+
+
+        constants.hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -90,33 +103,26 @@ public class TeleOpFieldOriented extends LinearOpMode {
         while (opModeIsActive()) {
             // run until the end of the match (driver presses STOP)
 
-
             /* Adjust Joystick X/Y inputs by navX MXP yaw angle */
-            angles = constants.imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-//            angles = constants.imu.getRobotYawPitchRollAngles();
-            float gyro_degrees = (angles.firstAngle) - (float) headingOffset;
-            telemetry.addData("Score X", scoreX);
-            telemetry.addData("Score Y", scoreY);
-            telemetry.addData("Yaw", ("%.3f"), gyro_degrees);
-            telemetry.addData("e_tilt", constants.e_tilt.getCurrentPosition());
-            telemetry.addData("slide_motor", constants.slide_motor.getCurrentPosition());
-            telemetry.addData("Left X", ("%.3f"), gamepad1.left_stick_x);
-            telemetry.addData("Right X", ("%.3f"), gamepad2.right_stick_x);
-            telemetry.addData("Right Y", ("%.3f"), gamepad2.right_stick_y);
-            telemetry.addData("gamepadHypot", ("%.3f"), gamepadHypot);
-            telemetry.addData("gamepadDegree", ("%.3f"), gamepadRadians);
-            telemetry.addData("movementDegree", ("%.3f"), movementRadians);
-            telemetry.addData("gamepadXControl", ("%.3f"), gamepadXControl);
-            telemetry.addData("gamepadYControl", ("%.3f"), gamepadYControl);
-            telemetry.addData("RF POWER", ("%.3f"), right_front_power);
-            telemetry.addData("RR POWER", ("%.3f"), right_rear_power);
-            telemetry.addData("LF POWER", ("%.3f"), left_front_power);
-            telemetry.addData("LR POWER", ("%.3f"), left_rear_power);
+//            angles = constants.imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            orientation = constants.imu.getRobotYawPitchRollAngles();
+//            float gyro_degrees = (angles.firstAngle) - (float) headingOffset;
+            double gyro_degrees = (orientation.getYaw(AngleUnit.DEGREES)) - (float) headingOffset;
 
+//            telemetry.addData("Score X", scoreX);
+//            telemetry.addData("Score Y", scoreY);
+            telemetry.addData("Yaw", ("%.3f"), gyro_degrees);
+            telemetry.addData("e_tilt current", constants.e_tilt.getCurrentPosition());
+            telemetry.addData("e_tilt target", constants.e_tilt.getTargetPosition());
+            telemetry.addData("hanger", constants.hanger.getCurrentPosition());
+            telemetry.addData("slide target", constants.slide_motor.getTargetPosition());
+            telemetry.addData("slide_motor", constants.slide_motor.getCurrentPosition());
+            telemetry.addData("slide old position", slideOldPosition);
+            telemetry.addData("state", state);
 
             driveTurn = -gamepad1.left_stick_x;
-            gamepadXCoordinate = gamepad1.right_stick_x; //this simply gives our x value relative to the driver
-            gamepadYCoordinate = -gamepad1.right_stick_y; //this simply gives our y value relative to the driver
+            gamepadXCoordinate = -gamepad1.right_stick_x; //this simply gives our x value relative to the driver
+            gamepadYCoordinate = gamepad1.right_stick_y; //this simply gives our y value relative to the driver
             gamepadHypot = Range.clip(Math.hypot(gamepadXCoordinate, gamepadYCoordinate), 0, 1);
 
             //finds just how much power to give the robot based on how much x and y given by gamepad
@@ -147,170 +153,314 @@ public class TeleOpFieldOriented extends LinearOpMode {
             constants.rightRear.setPower(right_rear_power * constants.DRIVE_SPEED);
             constants.leftRear.setPower(left_rear_power * constants.DRIVE_SPEED);
 
+            final int e_tiltPickUp = 320; //The tilt position for picking up a pixel 320 for 5618 and 6494
+            final int e_tiltStowed = -30; //The tilt position for moving across the field -30
+
+            final int slidePickup = -180;
+            final int slideLow = -1300;
+            final int slideMed = -1900;
+            final int slideHigh = -2600;
+            final int slideTop = -3100;
+            final double closed = 0.3;
+            final double halfopen = 0.525;
+            final double open = 1;
+
             //Declare other button functions here
             //*****************************     Gamepad 1     **************************************
             //**************   ROBOT SPEED   **************
             if (gamepad1.left_bumper) { // slow down for precision
-                constants.DRIVE_SPEED = 0.25;
+                constants.DRIVE_SPEED = 0.5;
             } else {
                 constants.DRIVE_SPEED = 1.0;
             }
 
-            //Spin 180 degrees
-            if (gamepad1.left_bumper) {
-//
-            }
-
             //Reset Heading
             while (gamepad1.right_bumper) {
-                constants.resetHeading();
+//                constants.resetHeading();
+//                headingOffset = constants.imu.resetYaw();
+//                robotHeading = 0;
+                constants.imu.resetYaw();
             }
 
             //*****************************     Gamepad 2     **************************************
             //
-            if (gamepad2.b) {
-                constants.claw.setPosition(.5);
-
-            }
-
-
-
-            int e_tiltPickUp = 270; //The tilt position for picking up a pixel
-            int e_tiltStowed = 0; //The tilt position for moving across the field
-            double p_tiltPickup = 0; //The tilt position of the claw mechanism for picking up a pixel
-            double p_tiltScore = 0.75; //The tilt position of the claw mechanism for scoring a pixel
-            int slidePickup = -160;
-            int slideLow = -1300;
-            int slideMed = -1900;
-            int slideHigh = -2600;
-            int slideTop = -3100;
-            int e_tiltPickup = 270;
-
+//GAMEPAD2.A collect pixels
+            // Pick up two pixels with one button from e_tilt upright
             if (gamepad2.a) {
-                // set slide extension to pickup position
-                constants.e_tilt.setTargetPosition(slidePickup);
-                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                constants.e_tilt.setPower(0.5);
-
-                // set elevator tilt and pixel tilt to pickup position (90 deg vertical)
-                constants.e_tilt.setTargetPosition((e_tiltPickUp));
-                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                constants.e_tilt.setPower(0.5);
-                constants.p_tilt.setPosition(0);
-                constants.claw.setPosition(1);
-
-//drop elevator down to get pixel
-                constants.slide_motor.setTargetPosition(0);
-
-                //Close the claw
-                constants.claw.setPosition(0);
-
-                // set elevator tilt position to stowed position
-                constants.e_tilt.setTargetPosition(e_tiltStowed);            } else {}
-
-           //Pickup a pixel
-            if (gamepad2.y) {
-//            constants.getPixel();
-                constants.clawCollect();
-            } else {}
-
-
-            if (gamepad2.right_stick_y < -0.2 || gamepad2.right_stick_y > 0.2) { //move slide manually
-                constants.slide_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                constants.slide_motor.setPower(gamepad2.right_stick_y);
-            } else {
-//                constants.slide_motor.setPower(0);
-            }
-
-            if (gamepad2.left_stick_y < -0.2 || gamepad2.left_stick_y > 0.2) { //tilt elevator manually
-                constants.e_tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                constants.e_tilt.setPower(gamepad2.left_stick_y * 0.5);
-            } else {
-//                constants.e_tilt.setPower(0);
-            }
-
-            //set scoring position
-            if (gamepad2.dpad_up) {
-                if (!dPadUpIsPressed) {
-                    scoreY++;
-                    if (scoreY > 4) {
-                        scoreY = 4;
+                // open claw (wait a bit if its not already open)
+                if (state == 0) {
+                    if (constants.claw.getPosition() < 1 || constants.p_tilt.getPosition() > 0) {
+                        constants.claw.setPosition(open);
+                        constants.p_tilt.setPosition(0);
+                        sleep(250);
                     }
-                    dPadUpIsPressed = true;
-                }
-            } else {
-                dPadUpIsPressed = false;
-            }
-
-            if (gamepad2.dpad_down) {
-                if (!dPadDownIsPressed) {
-                    scoreY--;
-                    if (scoreY < 1) {
-                        scoreY = 1;
+                    else {
+                        constants.claw.setPosition(open);
+                        constants.p_tilt.setPosition(0);
                     }
-                    dPadDownIsPressed = true;
+                    state ++;
                 }
-            } else {
-                dPadDownIsPressed = false;
-            }
+                // Put slide down
+                if (state == 1) {
+                    slideOldPosition = constants.slide_motor.getCurrentPosition();
+                    constants.slide_motor.setTargetPosition(0);
+                    constants.slide_motor.setPower(0.1); //reduce power to prevent overdrive
+                    state++;
 
-            if (gamepad2.dpad_left) {
-                if (!dPadLeftIsPressed) {
-                    scoreX--;
-                    if (scoreX < 1) {
-                        scoreX = 1;
+                }
+                //look for the slide to stop moving (landed on pixels)
+                if (state == 2) {
+                    sleep(200); //wait a bit for the values to change
+                    //evaluate the difference between the current value and old value. If it's still moving it will
+                    //be more than 5 ticks in 100 ms
+                    while (Math.abs(constants.slide_motor.getCurrentPosition() - slideOldPosition) > 5) {
+                        //update the variable inside the while loop
+                        telemetry.addData("diff", Math.abs(constants.slide_motor.getCurrentPosition() - slideOldPosition));
+                        telemetry.update();
+                        slideOldPosition = constants.slide_motor.getCurrentPosition();
+                        sleep(100);
                     }
-                    dPadLeftIsPressed = true;
+                    telemetry.update();
+                    state++;
                 }
-            } else {
-                dPadLeftIsPressed = false;
-            }
+                if (state == 3) {
+                    constants.slide_motor.setTargetPosition(slideOldPosition - 180); //pop the slide up a bit
+                    constants.claw.setPosition(closed); //close the claw
+//                    sleep(500);
+                    state++;
+                }
 
-            if (gamepad2.dpad_right) {
-                if (!dPadRightIsPressed) {
-                    scoreX++;
-                    if (scoreX > 3) {
-                        scoreX = 3;
+                // wait until claw is closed
+                if (state == 4) {
+                    sleep(500);
+                    state++;
+                }
+                // pick up slide just a little bit more to clear the stack
+                if (state == 5) {
+                    constants.slide_motor.setPower(1.0); //return power to full
+                    constants.slide_motor.setTargetPosition(slidePickup);
+                    state++;
+                }
+                if (state == 6) {
+                    constants.e_tilt.setTargetPosition(-250);
+                    constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    state = 0;
+                    slideOldPosition = 20;
+                }
+                telemetry.update();
+            }// done
+
+//GAMEPAD2.Y Score Pixels
+            if (gamepad2.y){
+                // run slide out to clearance position
+                if (state == 0){
+                    constants.slide_motor.setTargetPosition(slideMed);
+                    state ++;
+                }
+                //wait for slide to clear
+                if (state == 1){
+                    telemetry.addData("Debug", "Entering state 1");
+                    telemetry.update();
+                    while (constants.slide_motor.getCurrentPosition() > -1700){
+                       //wait
                     }
-                    dPadRightIsPressed = true;
+                    state++;
                 }
-            } else {
-                dPadRightIsPressed = false;
+                //rotate p_tilt
+                if (state == 2){
+                    telemetry.addData("Debug", "Entering state 2");
+                    telemetry.update();
+                    constants.p_tilt.setPosition(1);
+                    sleep(500);
+                    state ++;
+                }
+                //release the claw
+                if (state == 3){
+                    telemetry.addData("Debug", "Entering state 3");
+                    telemetry.update();
+                    constants.claw.setPosition(halfopen);
+                    sleep(300);
+                    constants.claw.setPosition(open);
+                    sleep(100);
+                    state ++;
+                }
+                //close the claw
+                if (state == 4){
+                    telemetry.addData("Debug", "Entering state 4");
+                    telemetry.update();
+                    constants.claw.setPosition(closed);
+                    sleep(250); //wait for the claw to close
+                    state ++;
+                }
+                //rotate p_tilt
+                if (state == 5){
+                    telemetry.addData("Debug", "Entering state 5");
+                    telemetry.update();
+                    constants.p_tilt.setPosition(0);
+                    sleep(500);
+                    state ++;
+                }
+                //return slide to zero
+                if (state == 6){
+                    telemetry.addData("Debug", "Entering state 6");
+                    telemetry.update();
+                    constants.slide_motor.setTargetPosition(slidePickup);
+                    state ++;
+                }
+                if (state == 7){
+                    telemetry.addData("Debug", "Entering state 7");
+                    telemetry.update();
+                    constants.claw.setPosition(open);
+                    state = 0;
+                }
             }
 
 
-            if (gamepad2.right_bumper) {} else {}
+            if (gamepad2.b) {
+                constants.claw.setPosition(closed);
+            }
+
 
             if (gamepad2.x) {
-                constants.claw.setPosition(0);
+                constants.claw.setPosition(halfopen);
+                sleep(500);
+                constants.claw.setPosition(open);
+            }
 
-            } else {}
-            
+
+            if (gamepad2.right_trigger > 0.5){
+                constants.e_tilt.setTargetPosition(e_tiltTarget - 75);
+                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                constants.slide_motor.setTargetPosition(slideTarget + 100);
+                constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+
+
+            if(gamepad2.left_trigger > 0.5){
+                constants.e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                constants.slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            }
+
+
+            slideTarget = constants.slide_motor.getCurrentPosition();
+            e_tiltTarget = constants.e_tilt.getCurrentPosition();
+            hangerTarget = constants.hanger.getCurrentPosition();
+
+            if (gamepad2.right_stick_y < -0.2 ) { //move slide manually
+                if (slideTarget > slideMed){
+                    slideTarget -= 150;
+                }
+                else{
+                    slideTarget = slideMed;
+                }
+                constants.slide_motor.setTargetPosition(slideTarget);
+                constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+            } else if (gamepad2.right_stick_y > 0.2){
+                if (slideTarget < -10){
+                    slideTarget += 150;
+                }
+                else{
+                    slideTarget = -10;
+                }
+                constants.slide_motor.setTargetPosition(slideTarget);
+                constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+
+            if (gamepad2.left_stick_y > 0.2 ) { //move slide manually
+                if (e_tiltTarget > e_tiltStowed){
+                    e_tiltTarget -= 20;
+                }
+                else {
+                    e_tiltTarget = e_tiltStowed;
+                }
+                constants.e_tilt.setTargetPosition(e_tiltTarget);
+                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+            } else if (gamepad2.left_stick_y < -0.2){
+                if (e_tiltTarget < e_tiltPickUp){
+                    e_tiltTarget += 20;
+                }
+                else {
+                    e_tiltTarget = e_tiltPickUp;
+                }
+                constants.e_tilt.setTargetPosition(e_tiltTarget);
+                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+
+//            set scoring position
+            if (gamepad2.dpad_up) {
+                constants.p_tilt.setPosition(1);
+
+
+            }
+            if (gamepad2.dpad_down) {
+                constants.p_tilt.setPosition(0);
+
+
+            }
+//
+//            if (gamepad2.dpad_down) {
+//                if (!dPadDownIsPressed) {
+//                    scoreY--;
+//                    if (scoreY < 1) {
+//                        scoreY = 1;
+//                    }
+//                    dPadDownIsPressed = true;
+//                }
+//            } else {
+//                dPadDownIsPressed = false;
+//            }
+//
+//            if (gamepad2.dpad_left) {
+//                if (!dPadLeftIsPressed) {
+//                    scoreX--;
+//                    if (scoreX < 1) {
+//                        scoreX = 1;
+//                    }
+//                    dPadLeftIsPressed = true;
+//                }
+//            } else {
+//                dPadLeftIsPressed = false;
+//            }
+//
+//            if (gamepad2.dpad_right) {
+//                if (!dPadRightIsPressed) {
+//                    scoreX++;
+//                    if (scoreX > 3) {
+//                        scoreX = 3;
+//                    }
+//                    dPadRightIsPressed = true;
+//                }
+//            } else {
+//                dPadRightIsPressed = false;
+//            }
+
+
+            if (gamepad2.right_bumper) {
+                constants.hanger.setTargetPosition(-30000);
+                constants.hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                constants.hanger.setPower(1);
+            }
+
+            if (gamepad2.left_bumper) {
+                constants.hanger.setTargetPosition(-16000);
+                constants.hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                constants.hanger.setPower(1);
+            }
+
+            //load the hanger lead screw
+
+
+
             telemetry.update();
 
         } //End of while op mode is active
 
     }//End of run OP Mode
 
-    public void runToPosition(){
-        constants.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        constants.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        constants.leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        constants.rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        constants.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        constants.leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        constants.rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        constants.leftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
-
-    public void runUsingEncoder(){
-        constants.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        constants.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        constants.rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        constants.leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-    }
 
 
 //    public double getRawHeading() {
