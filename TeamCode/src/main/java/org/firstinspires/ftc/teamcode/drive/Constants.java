@@ -41,7 +41,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -138,14 +140,20 @@ public class Constants {
     }
 
     /* Declare OpMode members. */
-    private LinearOpMode controlFreaks = null;   // gain access to methods in the calling OpMode.
+    public LinearOpMode controlFreaks;   // gain access to methods in the calling OpMode.
     // Define a constructor that allows the OpMode to pass a reference to itself.
-    public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;}
+    public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;
+//        e_tilt_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_stop");
+//        e_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_stop");
+//        e_tilt_zero = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_zero");
+    }
     public Commands commands;
-    public Constants(Utilities utilities) {controlFreaks = utilities;}
+    public Constants(Utilities utilities) {controlFreaks = utilities;
+//        e_tilt_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_stop");
+//        e_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_stop");
+//        e_tilt_zero = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_zero");
+    }
     public void ConceptAprilTag (TeleOpFieldOriented opmode) { controlFreaks = opmode;}
-
-
 
         // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
     DcMotor leftFront         = null;
@@ -164,9 +172,13 @@ public class Constants {
     Servo p_tilt              = null; //controls the tilt angle of the pixel delivery (claw)
     Servo drone               = null; //release the drone
 
-    DigitalChannel p_tilt_stop;  // Touch sensor for tilt of claw (pixel)
-    DigitalChannel e_tilt_stop;  // Touch sensor for tilt of elevator CH 0-1
-    DigitalChannel e_stop;  // Touch sensor for lower limit of elevator
+//    // Initialize Touch Sensors
+//    // Touch sensor for tilt of elevator CH 0-1
+//    TouchSensor e_tilt_stop;
+//    // Touch sensor for lower limit of elevator CH 2-3
+//    TouchSensor e_stop;
+//    // Touch sensor for tilt upper limit of elevator CH 4-5
+//    TouchSensor e_tilt_zero;
 
     private double robotHeading  = 0;
     private double headingOffset = 0;
@@ -268,18 +280,14 @@ private static final boolean USE_WEBCAM = true;  // true for webcam, false for p
 
         e_tilt.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        e_tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        e_tilt.setPower(0.5);
+
 
         hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hanger.setPower(1.0);
-//
+        hanger.setTargetPosition(0);
+
         slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        slide_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        slide_motor.setPower(1.0);
-
-
+        slide_motor.setTargetPosition(0);
 
         // Set motor directions
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -292,15 +300,9 @@ private static final boolean USE_WEBCAM = true;  // true for webcam, false for p
         claw        = controlFreaks.hardwareMap.get(Servo.class, "claw");
         p_tilt      = controlFreaks.hardwareMap.get(Servo.class, "p_tilt");
         drone       = controlFreaks.hardwareMap.get(Servo.class, "drone");
-        claw.setPosition(1);
-        p_tilt.setPosition(0);
 
-        // Initialize Touch Sensors
-//        p_tilt_stop.setMode(DigitalChannel.Mode.INPUT); //limit switch for the tilting pixel delivery
-//        e_tilt_stop.setMode(DigitalChannel.Mode.INPUT); //limit switch for the elevator tilt
-//        e_stop.setMode(DigitalChannel.Mode.INPUT); //limit switch for the elevator extension
 
-        // define initialization values for IMU, and then initialize it.
+                  // define initialization values for IMU, and then initialize it.
 //        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 //        parameters.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
 //        parameters.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;

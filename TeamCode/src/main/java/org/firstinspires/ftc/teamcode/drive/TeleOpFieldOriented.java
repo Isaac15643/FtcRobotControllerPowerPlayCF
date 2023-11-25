@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -27,6 +28,12 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
     Constants constants = new Constants(this);
     Commands commands;
+    //initalize touch sensors
+    TouchSensor e_tilt_up;
+    // Touch sensor for lower limit of elevator CH 2-3
+    TouchSensor e_stop;
+    // Touch sensor for tilt upper limit of elevator CH 4-5
+    TouchSensor e_tilt_down;
 
     // State used for updating telemetry
     Orientation angles;
@@ -49,9 +56,9 @@ public class TeleOpFieldOriented extends LinearOpMode {
     int state = 0;
     int slideOldPosition = 20;
     int slideNewPosition = 0;
-
-
-
+    int slideTarget = 0;
+    int e_tiltTarget = 0;
+    int hangerTarget = 0;
 
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
@@ -70,9 +77,19 @@ public class TeleOpFieldOriented extends LinearOpMode {
     public void runOpMode() {
 
         constants.init();
+        e_tilt_up = hardwareMap.get(TouchSensor.class, "e_tilt_up");
+        // Touch sensor for lower limit of elevator CH 2-3
+        e_stop = hardwareMap.get(TouchSensor.class, "e_stop");
+        // Touch sensor for tilt upper limit of elevator CH 4-5
+        e_tilt_down = hardwareMap.get(TouchSensor.class, "e_tilt_down");
+        constants.e_tilt.setPower(0.5);
+        constants.hanger.setPower(1.0);
+        constants.slide_motor.setPower(1.0);
+        initMechs();
         telemetry.update();
         constants.DRIVE_SPEED = 0.5;
         constants.TURN_SPEED = 0.50;
+
         YawPitchRollAngles orientation;
 
         double driveTurn;
@@ -88,14 +105,6 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
         boolean pickingUp = false;
 
-
-        int slideTarget = 0;
-        int e_tiltTarget = 0;
-        int hangerTarget = 0;
-
-
-
-        constants.hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -119,6 +128,12 @@ public class TeleOpFieldOriented extends LinearOpMode {
             telemetry.addData("slide_motor", constants.slide_motor.getCurrentPosition());
             telemetry.addData("slide old position", slideOldPosition);
             telemetry.addData("state", state);
+            telemetry.addData("e_tilt_up", e_tilt_up.isPressed());
+            telemetry.addData("e_tilt_down", e_tilt_down.isPressed());
+            telemetry.addData("e_stop", e_stop.isPressed());
+            telemetry.addData("gamepad2.right_stick_y", gamepad2.right_stick_y);
+            telemetry.addData("gamepad2.left_stick_y", gamepad2.left_stick_y);
+
 
             driveTurn = -gamepad1.left_stick_x;
             gamepadXCoordinate = -gamepad1.right_stick_x; //this simply gives our x value relative to the driver
@@ -153,10 +168,10 @@ public class TeleOpFieldOriented extends LinearOpMode {
             constants.rightRear.setPower(right_rear_power * constants.DRIVE_SPEED);
             constants.leftRear.setPower(left_rear_power * constants.DRIVE_SPEED);
 
-            final int e_tiltPickUp = 320; //The tilt position for picking up a pixel 320 for 5618 and 6494
-            final int e_tiltStowed = -30; //The tilt position for moving across the field -30
+            final int e_tiltPickUp = 0; //The tilt position for picking up a pixel 320 for 5618 and 6494
+            final int e_tiltStowed = -475; //The tilt position for moving across the field -30
 
-            final int slidePickup = -180;
+            final int slidePickup = -250;
             final int slideLow = -1300;
             final int slideMed = -1900;
             final int slideHigh = -2600;
@@ -164,6 +179,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
             final double closed = 0.3;
             final double halfopen = 0.525;
             final double open = 1;
+            boolean tryingToScore = false;
 
             //Declare other button functions here
             //*****************************     Gamepad 1     **************************************
@@ -175,7 +191,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
             }
 
             //Reset Heading
-            while (gamepad1.right_bumper) {
+            if (gamepad1.right_bumper) {
 //                constants.resetHeading();
 //                headingOffset = constants.imu.resetYaw();
 //                robotHeading = 0;
@@ -183,6 +199,10 @@ public class TeleOpFieldOriented extends LinearOpMode {
             }
 
             //*****************************     Gamepad 2     **************************************
+            //close claw when slide is up
+            if (constants.slide_motor.getCurrentPosition() < -550 && !tryingToScore){
+                constants.claw.setPosition(closed);
+            }
             //
 //GAMEPAD2.A collect pixels
             // Pick up two pixels with one button from e_tilt upright
@@ -202,25 +222,22 @@ public class TeleOpFieldOriented extends LinearOpMode {
                 }
                 // Put slide down
                 if (state == 1) {
-                    slideOldPosition = constants.slide_motor.getCurrentPosition();
                     constants.slide_motor.setTargetPosition(0);
                     constants.slide_motor.setPower(0.1); //reduce power to prevent overdrive
                     state++;
-
                 }
                 //look for the slide to stop moving (landed on pixels)
                 if (state == 2) {
                     sleep(200); //wait a bit for the values to change
                     //evaluate the difference between the current value and old value. If it's still moving it will
                     //be more than 5 ticks in 100 ms
-                    while (Math.abs(constants.slide_motor.getCurrentPosition() - slideOldPosition) > 5) {
+                    while (opModeIsActive() && Math.abs(constants.slide_motor.getCurrentPosition() - slideOldPosition) > 5) {
                         //update the variable inside the while loop
                         telemetry.addData("diff", Math.abs(constants.slide_motor.getCurrentPosition() - slideOldPosition));
                         telemetry.update();
                         slideOldPosition = constants.slide_motor.getCurrentPosition();
-                        sleep(100);
+                        sleep(200);
                     }
-                    telemetry.update();
                     state++;
                 }
                 if (state == 3) {
@@ -241,9 +258,9 @@ public class TeleOpFieldOriented extends LinearOpMode {
                     constants.slide_motor.setTargetPosition(slidePickup);
                     state++;
                 }
+                //tilt the slide to stowed position
                 if (state == 6) {
                     constants.e_tilt.setTargetPosition(-250);
-                    constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     state = 0;
                     slideOldPosition = 20;
                 }
@@ -253,21 +270,26 @@ public class TeleOpFieldOriented extends LinearOpMode {
 //GAMEPAD2.Y Score Pixels
             if (gamepad2.y){
                 // run slide out to clearance position
+                tryingToScore = true;
                 if (state == 0){
+                    constants.e_tilt.setTargetPosition(e_tiltStowed);
+                    state ++;
+                }
+                if (state == 1){
                     constants.slide_motor.setTargetPosition(slideMed);
                     state ++;
                 }
                 //wait for slide to clear
-                if (state == 1){
+                if (state == 2){
                     telemetry.addData("Debug", "Entering state 1");
                     telemetry.update();
-                    while (constants.slide_motor.getCurrentPosition() > -1700){
+                    while (opModeIsActive() && constants.slide_motor.getCurrentPosition() > -1700){
                        //wait
                     }
                     state++;
                 }
                 //rotate p_tilt
-                if (state == 2){
+                if (state == 3){
                     telemetry.addData("Debug", "Entering state 2");
                     telemetry.update();
                     constants.p_tilt.setPosition(1);
@@ -275,17 +297,17 @@ public class TeleOpFieldOriented extends LinearOpMode {
                     state ++;
                 }
                 //release the claw
-                if (state == 3){
+                if (state == 4){
                     telemetry.addData("Debug", "Entering state 3");
                     telemetry.update();
                     constants.claw.setPosition(halfopen);
-                    sleep(300);
+                    sleep(400);
                     constants.claw.setPosition(open);
                     sleep(100);
                     state ++;
                 }
                 //close the claw
-                if (state == 4){
+                if (state == 5){
                     telemetry.addData("Debug", "Entering state 4");
                     telemetry.update();
                     constants.claw.setPosition(closed);
@@ -293,7 +315,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
                     state ++;
                 }
                 //rotate p_tilt
-                if (state == 5){
+                if (state == 6){
                     telemetry.addData("Debug", "Entering state 5");
                     telemetry.update();
                     constants.p_tilt.setPosition(0);
@@ -301,44 +323,59 @@ public class TeleOpFieldOriented extends LinearOpMode {
                     state ++;
                 }
                 //return slide to zero
-                if (state == 6){
+                if (state == 7){
                     telemetry.addData("Debug", "Entering state 6");
                     telemetry.update();
                     constants.slide_motor.setTargetPosition(slidePickup);
                     state ++;
                 }
-                if (state == 7){
+                if (state == 8){
                     telemetry.addData("Debug", "Entering state 7");
                     telemetry.update();
                     constants.claw.setPosition(open);
                     state = 0;
+
+                    tryingToScore = false;
                 }
             }
+//GAMEPAD2 X upright the slide and open the claw
 
+            if (gamepad2.x){
+                constants.e_tilt.setTargetPosition(0);
+                constants.slide_motor.setTargetPosition(-250);
+                constants.claw.setPosition(open);
+            }
 
-            if (gamepad2.b) {
+            if (gamepad2.right_stick_button) {
                 constants.claw.setPosition(closed);
             }
 
 
-            if (gamepad2.x) {
-                constants.claw.setPosition(halfopen);
-                sleep(500);
-                constants.claw.setPosition(open);
+            if (gamepad2.b) {
+                constants.e_tilt.setTargetPosition(e_tiltStowed);
             }
 
-
+            // Zero the slide
             if (gamepad2.right_trigger > 0.5){
-                constants.e_tilt.setTargetPosition(e_tiltTarget - 75);
-                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                constants.slide_motor.setTargetPosition(slideTarget + 100);
+                while (opModeIsActive() && !e_stop.isPressed()) {
+                    constants.slide_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    constants.slide_motor.setPower(0.5);
+                }
+                constants.slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                constants.slide_motor.setTargetPosition(0);
                 constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
-
+            // Zero the tilt
             if(gamepad2.left_trigger > 0.5){
+                while (opModeIsActive() && !e_tilt_down.isPressed()) {
+                    constants.e_tilt.setTargetPosition(e_tiltTarget + 100);
+                    constants.e_tilt.setPower(0.5);
+                }
                 constants.e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                constants.slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                constants.e_tilt.setTargetPosition(0);
+                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
             }
 
 
@@ -346,7 +383,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
             e_tiltTarget = constants.e_tilt.getCurrentPosition();
             hangerTarget = constants.hanger.getCurrentPosition();
 
-            if (gamepad2.right_stick_y < -0.2 ) { //move slide manually
+            if (gamepad2.right_stick_y < -0.2 ) { //move slide up manually
                 if (slideTarget > slideMed){
                     slideTarget -= 150;
                 }
@@ -354,8 +391,6 @@ public class TeleOpFieldOriented extends LinearOpMode {
                     slideTarget = slideMed;
                 }
                 constants.slide_motor.setTargetPosition(slideTarget);
-                constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
 
             } else if (gamepad2.right_stick_y > 0.2){
                 if (slideTarget < -10){
@@ -365,29 +400,25 @@ public class TeleOpFieldOriented extends LinearOpMode {
                     slideTarget = -10;
                 }
                 constants.slide_motor.setTargetPosition(slideTarget);
-                constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
             if (gamepad2.left_stick_y > 0.2 ) { //move slide manually
-                if (e_tiltTarget > e_tiltStowed){
+                if (e_tiltTarget >= e_tiltStowed){
                     e_tiltTarget -= 20;
                 }
                 else {
                     e_tiltTarget = e_tiltStowed;
                 }
                 constants.e_tilt.setTargetPosition(e_tiltTarget);
-                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
 
             } else if (gamepad2.left_stick_y < -0.2){
-                if (e_tiltTarget < e_tiltPickUp){
+                if (e_tiltTarget <= e_tiltPickUp){
                     e_tiltTarget += 20;
                 }
                 else {
                     e_tiltTarget = e_tiltPickUp;
                 }
                 constants.e_tilt.setTargetPosition(e_tiltTarget);
-                constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
 //            set scoring position
@@ -441,25 +472,61 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
             if (gamepad2.right_bumper) {
                 constants.hanger.setTargetPosition(-30000);
-                constants.hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 constants.hanger.setPower(1);
             }
 
             if (gamepad2.left_bumper) {
                 constants.hanger.setTargetPosition(-16000);
-                constants.hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 constants.hanger.setPower(1);
             }
-
-            //load the hanger lead screw
-
-
 
             telemetry.update();
 
         } //End of while op mode is active
-
+        telemetry.update();
     }//End of run OP Mode
+
+
+    private void initMechs() {
+        constants.p_tilt.setPosition(0);
+        constants.claw.setPosition(1);
+        constants.e_tilt.setTargetPosition(0);
+        constants.hanger.setTargetPosition(0);
+        constants.slide_motor.setTargetPosition(-100);
+        constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        constants.hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        constants.slide_motor.setPower(0.5);
+
+        int slideCounter = 0;
+        int e_tiltCounter = 0;
+
+        while (!e_tilt_up.isPressed()) {
+            e_tiltCounter = constants.e_tilt.getCurrentPosition() + 10;
+            constants.e_tilt.setTargetPosition(e_tiltCounter);
+            sleep(20);
+        }
+        constants.e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        constants.e_tilt.setPower(0.5);
+        constants.e_tilt.setTargetPosition(0);
+        constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        while (!e_stop.isPressed()) {
+            slideCounter = constants.slide_motor.getCurrentPosition() + 50;
+            constants.slide_motor.setTargetPosition(slideCounter);
+            sleep(20);
+        }
+        constants.slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        constants.slide_motor.setPower(1.0);
+        constants.slide_motor.setTargetPosition(-250);
+        constants.slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        telemetry.addData(">", "Mechs Initialized");
+        telemetry.update();
+
+    }
+}
 
 
 
@@ -468,14 +535,14 @@ public class TeleOpFieldOriented extends LinearOpMode {
 //        return angles.firstAngle;
 //    }
 
-    /**
-     * Reset the "offset" heading back to zero
-     */
-    public void resetHeading () {
-        // Save a new heading offset equal to the current raw heading.
-        headingOffset = angles.firstAngle;
-        robotHeading = 0;
-    }
+//    /**
+//     * Reset the "offset" heading back to zero
+//     */
+//    public void resetHeading () {
+//        // Save a new heading offset equal to the current raw heading.
+//        headingOffset = angles.firstAngle;
+//        robotHeading = 0;
+//    }
 
 //        //Constants and functions for adding automatic steering controls
 //        static final double COUNTS_PER_MOTOR_REV = 28.0;   // Rev Ultraplanetary HD Hex motor: 28.0
@@ -555,4 +622,6 @@ public class TeleOpFieldOriented extends LinearOpMode {
 //            constants.rightFront.setPower(rightSpeed);
 //            constants.rightRear.setPower(rightSpeed);
 //        }
-}
+
+
+
