@@ -46,17 +46,17 @@ public class b2 extends LinearOpMode {
         Pose2d newPose = null; //null for now, we'll give it a value later
 
         //Init the aprilTag pipeline
-        commands.initAprilTag();
+
 
         //read april tags (during init)
-        commands.runAprilTag();
+
 
         //TODO: Establish which sequence we will run based on aprilTag bearing
-        if(commands.aprilTagLocation > 2) {
+        if(commands.aprilTagLocation > 400) {
             newPose = Left.end(); // newPose is the end of the first sequence
             chosenSequence = Left;
 
-        } else if (commands.aprilTagLocation < 2){
+        } else if (commands.aprilTagLocation < 300){
             newPose = Right.end();
             chosenSequence = Right;
 
