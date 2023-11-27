@@ -55,6 +55,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
     private int scoreX = 1; //horizontal scoring position
     int state = 0;
     int slideOldPosition = 20;
+    int lastSlidePosition = 0;
     int slideNewPosition = 0;
     int slideTarget = 0;
     int e_tiltTarget = 0;
@@ -127,6 +128,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
             telemetry.addData("slide target", constants.slide_motor.getTargetPosition());
             telemetry.addData("slide_motor", constants.slide_motor.getCurrentPosition());
             telemetry.addData("slide old position", slideOldPosition);
+            telemetry.addData("slide last position", lastSlidePosition);
             telemetry.addData("state", state);
             telemetry.addData("e_tilt_up", e_tilt_up.isPressed());
             telemetry.addData("e_tilt_down", e_tilt_down.isPressed());
@@ -239,11 +241,18 @@ public class TeleOpFieldOriented extends LinearOpMode {
                         sleep(200);
                     }
                     state++;
+                    lastSlidePosition = constants.slide_motor.getCurrentPosition();
                 }
                 if (state == 3) {
-                    constants.slide_motor.setTargetPosition(slideOldPosition - 180); //pop the slide up a bit
+                    constants.slide_motor.setPower(1.0); //reduce power to prevent overdrive
+                    constants.slide_motor.setTargetPosition(lastSlidePosition - 80);//pop the slide up a bit
+                    while (opModeIsActive() && Math.abs(constants.slide_motor.getCurrentPosition() - lastSlidePosition) > 5) {
+                        //update the variable inside the while loop
+                        telemetry.addData("diff", Math.abs(constants.slide_motor.getCurrentPosition() - slideOldPosition));
+                        telemetry.update();
+                        slideOldPosition = constants.slide_motor.getCurrentPosition();
+                        sleep(200);}
                     constants.claw.setPosition(closed); //close the claw
-//                    sleep(500);
                     state++;
                 }
 
@@ -254,7 +263,6 @@ public class TeleOpFieldOriented extends LinearOpMode {
                 }
                 // pick up slide just a little bit more to clear the stack
                 if (state == 5) {
-                    constants.slide_motor.setPower(1.0); //return power to full
                     constants.slide_motor.setTargetPosition(slidePickup);
                     state++;
                 }
@@ -273,6 +281,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
                 tryingToScore = true;
                 if (state == 0){
                     constants.e_tilt.setTargetPosition(e_tiltStowed);
+                    constants.claw.setPosition(closed);
                     state ++;
                 }
                 if (state == 1){
@@ -319,7 +328,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
                     telemetry.addData("Debug", "Entering state 5");
                     telemetry.update();
                     constants.p_tilt.setPosition(0);
-                    sleep(500);
+                    sleep(700);
                     state ++;
                 }
                 //return slide to zero
