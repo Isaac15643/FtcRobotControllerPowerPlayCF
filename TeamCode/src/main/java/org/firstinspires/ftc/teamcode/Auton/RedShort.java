@@ -19,24 +19,33 @@ import java.util.List;
 
 @Autonomous
 
-public class redShort extends LinearOpMode {
+public class RedShort extends LinearOpMode {
 
     AprilTagProcessor aprilTag;
     VisionPortal myVisionPortal;
     Trajectories trajectories;
     double markerLocation;
-    public Constants constants;
+    Constants constants = new Constants(this);
     private TrajectorySequence chosenSequence;
 
 
     public void runOpMode() throws InterruptedException {
+
 
         // Init the AprilTag processor and Vision Portal
         initAprilTag();
 
         //Instantiate the drive system
         MecanumDrive drivetrain = new MecanumDrive(hardwareMap);
-
+        final double closed = 0.3;
+        final double halfopen = 0.525;
+        final double open = 1;
+        final int slidePickup = -250;
+        final int slideLow = -1300;
+        final int slideMed = -1900;
+        //close claw and lift slide
+        constants.claw.setPosition(1);
+        constants.slide_motor.setTargetPosition(-180);
         //Provide the initial pose
         Pose2d blueLongStart = new Pose2d(-36, 60, Math.toRadians(270));
         Pose2d blueShortStart = new Pose2d(12, 60, Math.toRadians(270));
@@ -49,7 +58,10 @@ public class redShort extends LinearOpMode {
         drivetrain.setPoseEstimate(startPose);
 
         TrajectorySequence Left = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineTo(new Vector2d(12, -36))
+                .lineToLinearHeading(new Pose2d(12,-36,Math.toRadians(180)))
+                .lineToConstantHeading(new Vector2d(10,-36))
+                .addTemporalMarker(() -> constants.claw.setPosition(halfopen))
+
                 .build();
 
         TrajectorySequence Center = drivetrain.trajectorySequenceBuilder(startPose)

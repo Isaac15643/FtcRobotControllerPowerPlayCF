@@ -50,6 +50,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.Auton.RedShort;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.apriltag.AprilTagDetection;
@@ -142,17 +143,12 @@ public class Constants {
     /* Declare OpMode members. */
     public LinearOpMode controlFreaks;   // gain access to methods in the calling OpMode.
     // Define a constructor that allows the OpMode to pass a reference to itself.
-    public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;
-//        e_tilt_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_stop");
-//        e_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_stop");
-//        e_tilt_zero = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_zero");
-    }
+    public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;}
+    public Constants(RedShort redShort) {controlFreaks = redShort;}
+
     public Commands commands;
-    public Constants(Utilities utilities) {controlFreaks = utilities;
-//        e_tilt_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_stop");
-//        e_stop = controlFreaks.hardwareMap.get(TouchSensor.class, "e_stop");
-//        e_tilt_zero = controlFreaks.hardwareMap.get(TouchSensor.class, "e_tilt_zero");
-    }
+    public Constants(Utilities utilities) {controlFreaks = utilities;}
+
     public void ConceptAprilTag (TeleOpFieldOriented opmode) { controlFreaks = opmode;}
 
         // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
@@ -160,7 +156,7 @@ public class Constants {
     DcMotor rightFront        = null;
     DcMotor rightRear         = null;
     DcMotor leftRear          = null;
-    DcMotor slide_motor       = null; //deploys and retracts the elevator
+    public DcMotor slide_motor       = null; //deploys and retracts the elevator
     DcMotor e_tilt            = null; //controls the tilt angle of the elevator
     DcMotor hanger            = null;
 //    public BNO055IMU imu      = null;      // Control/Expansion Hub IMU
@@ -168,7 +164,7 @@ public class Constants {
     YawPitchRollAngles orientation;
     AngularVelocity angularVelocity;
     public IMU imu;
-    Servo claw                = null; //Claw servo
+    public Servo claw                = null; //Claw servo
     Servo p_tilt              = null; //controls the tilt angle of the pixel delivery (claw)
     Servo drone               = null; //release the drone
 
