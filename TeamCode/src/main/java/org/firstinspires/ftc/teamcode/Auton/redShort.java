@@ -19,7 +19,7 @@ import java.util.List;
 
 @Autonomous
 
-public class b1 extends LinearOpMode {
+public class redShort extends LinearOpMode {
 
     AprilTagProcessor aprilTag;
     VisionPortal myVisionPortal;
@@ -38,26 +38,26 @@ public class b1 extends LinearOpMode {
         MecanumDrive drivetrain = new MecanumDrive(hardwareMap);
 
         //Provide the initial pose
-        Pose2d b1Start = new Pose2d(-36, 60, Math.toRadians(270));
-        Pose2d b2Start = new Pose2d(36, 60, Math.toRadians(270));
-        Pose2d r1Start = new Pose2d(-36, -60, Math.toRadians(90));
-        Pose2d r2Start = new Pose2d(36, -60, Math.toRadians(90));
+        Pose2d blueLongStart = new Pose2d(-36, 60, Math.toRadians(270));
+        Pose2d blueShortStart = new Pose2d(12, 60, Math.toRadians(270));
+        Pose2d redLongStart = new Pose2d(-36, -60, Math.toRadians(90));
+        Pose2d redShortStart = new Pose2d(12, -60, Math.toRadians(90));
 
-        Pose2d startPose = b1Start; //tell the robot where it starts
+        Pose2d startPose = redShortStart; //tell the robot where it starts
 
         //Occupy the initial pose
         drivetrain.setPoseEstimate(startPose);
 
         TrajectorySequence Left = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineTo(new Vector2d(-46, 20))
+                .lineTo(new Vector2d(12, -36))
                 .build();
 
         TrajectorySequence Center = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineTo(new Vector2d(-36, 29))
+                .lineTo(new Vector2d(12, -36))
                 .build();
 
         TrajectorySequence Right = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineTo(new Vector2d(-24, 20))
+                .lineTo(new Vector2d(12, -36))
                 .build();
 
         Pose2d newPose = Left.end(); // We are just giving it a value. The value will be reassigned later
@@ -70,7 +70,8 @@ public class b1 extends LinearOpMode {
             if (markerLocation > 400) {
                 newPose = Right.end(); // newPose is the end of the first sequence
                 chosenSequence = Right;
-//                chosenSequence = trajectories.b1Right(newPose);
+
+
 
                 } else if (markerLocation < 300) {
                     newPose = Center.end();
