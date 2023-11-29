@@ -157,15 +157,15 @@ public class Constants {
     DcMotor rightRear         = null;
     DcMotor leftRear          = null;
     public DcMotor slide_motor       = null; //deploys and retracts the elevator
-    DcMotor e_tilt            = null; //controls the tilt angle of the elevator
+    public DcMotor e_tilt            = null; //controls the tilt angle of the elevator
     DcMotor hanger            = null;
 //    public BNO055IMU imu      = null;      // Control/Expansion Hub IMU
 //    public BHI260IMU imu      = null;
     YawPitchRollAngles orientation;
     AngularVelocity angularVelocity;
     public IMU imu;
-    public Servo claw                = null; //Claw servo
-    Servo p_tilt              = null; //controls the tilt angle of the pixel delivery (claw)
+    public Servo claw         = null      ; //Claw servo
+    public Servo p_tilt              = null; //controls the tilt angle of the pixel delivery (claw)
     Servo drone               = null; //release the drone
 
 //    // Initialize Touch Sensors
@@ -276,14 +276,22 @@ private static final boolean USE_WEBCAM = true;  // true for webcam, false for p
 
         e_tilt.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        e_tilt.setTargetPosition(0);
+        e_tilt.setPower(0.5);
+        e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
         hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hanger.setTargetPosition(0);
+        hanger.setPower(0.5);
+        hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
 
         slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide_motor.setTargetPosition(0);
+        slide_motor.setPower(1.0);
+        slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Set motor directions
         leftFront.setDirection(DcMotor.Direction.FORWARD);
