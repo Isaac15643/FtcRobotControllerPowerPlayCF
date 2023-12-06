@@ -15,19 +15,15 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 
 import java.util.List;
-import java.util.Vector;
 
 @Autonomous
 @Disabled
-public class RedShort extends LinearOpMode {
+public class RedLong extends LinearOpMode {
 
     AprilTagProcessor aprilTag;
     VisionPortal myVisionPortal;
-    private TfodProcessor tfod;
-
     Trajectories trajectories;
     double markerLocation = 300;
     Constants constants = new Constants(this);
@@ -36,7 +32,6 @@ public class RedShort extends LinearOpMode {
     private Pose2d backDropGoTO;
     private Pose2d newPose;
     private Pose2d lastPose;
-
 
     final int e_tiltPickUp = 0; //The tilt position for picking up a pixel 320 for 5618 and 6494
     final int e_tiltStowed = -400; //The tilt position for moving across the field -30
@@ -69,10 +64,10 @@ public class RedShort extends LinearOpMode {
         //Provide the initial pose
         Pose2d blueLongStart = new Pose2d(-39, 60, Math.toRadians(270));
         Pose2d blueShortStart = new Pose2d(12, 60, Math.toRadians(270));
-        Pose2d redLongStart = new Pose2d(-39, -60, Math.toRadians(90));
+        Pose2d redLongStart = new Pose2d(-39, -63, Math.toRadians(90));
         Pose2d redShortStart = new Pose2d(12, -60, Math.toRadians(90));
 
-        Pose2d startPose = redShortStart; //tell the robot where it starts
+        Pose2d startPose = redLongStart; //tell the robot where it starts
 
         //Occupy the initial pose
         drivetrain.setPoseEstimate(startPose);
@@ -83,20 +78,18 @@ public class RedShort extends LinearOpMode {
                 .build();
 
         TrajectorySequence Left = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(12, -32, Math.toRadians(180)))
-                .forward(5)
+                .lineToLinearHeading(new Pose2d(-39, -32, Math.toRadians(180)))
+
                 .build();
 
         TrajectorySequence Center = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineTo(new Vector2d(12, -29))
+                .lineToLinearHeading(new Pose2d(-39,-15,Math.toRadians(270)))
                 .build();
 
         TrajectorySequence Right = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(24, -32, Math.toRadians(180)))
-                .back(8)
+                .lineToLinearHeading(new Pose2d(-34, -32, Math.toRadians(0)))
+                .back(3)
                 .build();
-
-
 
 
 
@@ -108,42 +101,49 @@ public class RedShort extends LinearOpMode {
             if (markerLocation > 350) {
                 newPose = Center.end(); // newPose is the end of the first sequence
                 chosenSequence = Center;
-                backDropGoTO = new Pose2d(54,-33,Math.toRadians(180));
+                backDropGoTO = new Pose2d(53,-33,Math.toRadians(180));
                 telemetrySequence = 2;
 
 
             } else if (markerLocation < 300) {
                 newPose = Left.end();
                 chosenSequence = Left;
-                backDropGoTO = new Pose2d(54,-27,Math.toRadians(180));
+                backDropGoTO = new Pose2d(53,-29,Math.toRadians(180));
                 telemetrySequence = 1;
 
 
             } else {
                 newPose = Right.end();
                 chosenSequence = Right;
-                backDropGoTO = new Pose2d(54, -40, Math.toRadians(180));
+                backDropGoTO = new Pose2d(53, -40, Math.toRadians(180));
                 telemetrySequence = 3;
 
             }
         }
-
-
         telemetry.addData("Chosen Sequence", telemetrySequence);
         telemetry.update();
 
-
+        TrajectorySequence goToBackdrop = drivetrain.trajectorySequenceBuilder(newPose)
+                .lineToLinearHeading(backDropGoTO)
+                .build();
 
         TrajectorySequence leftGoToBackdrop = drivetrain.trajectorySequenceBuilder(newPose)
+                .back(4)
+                .strafeRight(22)
+                .back(60)
                 .lineToLinearHeading(backDropGoTO)
 
                 .build();
 
         TrajectorySequence centerGoToBackdrop = drivetrain.trajectorySequenceBuilder(newPose)
+                .back(8)
+                .lineToLinearHeading(new Pose2d(24,-8))
                 .lineToLinearHeading(backDropGoTO)
                 .build();
 
         TrajectorySequence rightGoToBackdrop = drivetrain.trajectorySequenceBuilder(newPose)
+                .strafeLeft(22)
+                .forward(60)
                 .lineToLinearHeading(backDropGoTO)
                 .build();
 
@@ -157,13 +157,14 @@ public class RedShort extends LinearOpMode {
             lastPose = centerGoToBackdrop.end();
         }
 
-
         TrajectorySequence goPark = drivetrain.trajectorySequenceBuilder(lastPose)
                 .forward(5)
-                .lineTo(new Vector2d(43,-60))
-                .lineTo(new Vector2d(63,-60))
+                .lineTo(new Vector2d(45,-16))
+                .lineTo(new Vector2d(63,-16))
 
                 .build();
+
+
 
         if (telemetrySequence == 3) {
             lastSequence = rightGoToBackdrop;
@@ -181,7 +182,6 @@ public class RedShort extends LinearOpMode {
 
 
 
-
 //*********************************** START IS PRESSED ********************************************
         if (!isStopRequested()) {
             // Disable the AprilTag processor.
@@ -189,22 +189,28 @@ public class RedShort extends LinearOpMode {
 
             // drive your chosen sequence
             drivetrain.followTrajectorySequence(chosenSequence);
-            //drop one pixel
-            constants.claw.setPosition(halfopen);
-            sleep(500);
-            constants.e_tilt.setTargetPosition(e_tiltStowed);
-            sleep(500);
-
-            // drive to the back drop
-            constants.claw.setPosition(closed);
-            sleep(500);
+//            //drop one pixel and set e_tilt to stowed
+            dropPixelAndTilt();
+//            // drive to the back drop
             drivetrain.followTrajectorySequence(lastSequence);
-
+//            constants.claw.setPosition(closed);
+//            sleep(500);
+//            drivetrain.followTrajectorySequence(goToBackdrop);
             // score yellow pixel
             letsScore();
-            //go park
+            //park
             drivetrain.followTrajectorySequence(goPark);
         }
+    }
+
+    private void dropPixelAndTilt() {
+        constants.claw.setPosition(halfopen);
+        sleep(500);
+        constants.e_tilt.setTargetPosition(e_tiltStowed);
+        sleep(500);
+        constants.claw.setPosition(closed);
+
+
     }
 
     private void initAprilTag() {

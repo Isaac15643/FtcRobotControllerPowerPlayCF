@@ -15,19 +15,15 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 
 import java.util.List;
-import java.util.Vector;
 
 @Autonomous
 @Disabled
-public class RedShort extends LinearOpMode {
+public class BlueShort extends LinearOpMode {
 
     AprilTagProcessor aprilTag;
     VisionPortal myVisionPortal;
-    private TfodProcessor tfod;
-
     Trajectories trajectories;
     double markerLocation = 300;
     Constants constants = new Constants(this);
@@ -72,7 +68,7 @@ public class RedShort extends LinearOpMode {
         Pose2d redLongStart = new Pose2d(-39, -60, Math.toRadians(90));
         Pose2d redShortStart = new Pose2d(12, -60, Math.toRadians(90));
 
-        Pose2d startPose = redShortStart; //tell the robot where it starts
+        Pose2d startPose = blueShortStart; //tell the robot where it starts
 
         //Occupy the initial pose
         drivetrain.setPoseEstimate(startPose);
@@ -83,17 +79,21 @@ public class RedShort extends LinearOpMode {
                 .build();
 
         TrajectorySequence Left = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(12, -32, Math.toRadians(180)))
-                .forward(5)
+//                .lineToLinearHeading(new Pose2d(12, -32, Math.toRadians(180)))
+//                .forward(5)
+                .lineToLinearHeading(new Pose2d(24, -32, Math.toRadians(180)))
+                .back(8)
                 .build();
 
         TrajectorySequence Center = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineTo(new Vector2d(12, -29))
+                .lineTo(new Vector2d(12, 29))
                 .build();
 
         TrajectorySequence Right = drivetrain.trajectorySequenceBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(24, -32, Math.toRadians(180)))
-                .back(8)
+//                .lineToLinearHeading(new Pose2d(24, -32, Math.toRadians(180)))
+//                .back(8)
+                .lineToLinearHeading(new Pose2d(12, -32, Math.toRadians(180)))
+                .forward(5)
                 .build();
 
 
@@ -108,21 +108,21 @@ public class RedShort extends LinearOpMode {
             if (markerLocation > 350) {
                 newPose = Center.end(); // newPose is the end of the first sequence
                 chosenSequence = Center;
-                backDropGoTO = new Pose2d(54,-33,Math.toRadians(180));
+                backDropGoTO = new Pose2d(54,33,Math.toRadians(180));
                 telemetrySequence = 2;
 
 
             } else if (markerLocation < 300) {
                 newPose = Left.end();
                 chosenSequence = Left;
-                backDropGoTO = new Pose2d(54,-27,Math.toRadians(180));
+                backDropGoTO = new Pose2d(54,27,Math.toRadians(180));
                 telemetrySequence = 1;
 
 
             } else {
                 newPose = Right.end();
                 chosenSequence = Right;
-                backDropGoTO = new Pose2d(54, -40, Math.toRadians(180));
+                backDropGoTO = new Pose2d(54, 40, Math.toRadians(180));
                 telemetrySequence = 3;
 
             }
