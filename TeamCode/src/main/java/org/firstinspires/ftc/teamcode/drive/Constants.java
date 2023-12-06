@@ -36,21 +36,23 @@ import android.annotation.SuppressLint;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.Auton.BlueLongVision;
+import org.firstinspires.ftc.teamcode.Auton.BlueShort;
+import org.firstinspires.ftc.teamcode.Auton.BlueShortVision;
+import org.firstinspires.ftc.teamcode.Auton.RedLong;
 import org.firstinspires.ftc.teamcode.Auton.RedShort;
+import org.firstinspires.ftc.teamcode.Auton.RedShortVision;
+import org.firstinspires.ftc.teamcode.Auton.RedLongVisionDropOne;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.apriltag.AprilTagDetection;
@@ -145,28 +147,33 @@ public class Constants {
     // Define a constructor that allows the OpMode to pass a reference to itself.
     public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;}
     public Constants(RedShort redShort) {controlFreaks = redShort;}
-
-    public Commands commands;
+    public Constants(RedLong redLong) {controlFreaks = redLong;}
+    public Constants(BlueShort blueShort) {controlFreaks = blueShort;}
+//    public Constants(BlueLong blueLong) {controlFreaks = blueLong;}
+    public Constants(RedShortVision redShortVision) {controlFreaks = redShortVision;}
+    public Constants(BlueShortVision blueShortVision) {controlFreaks = blueShortVision;}
+    public Constants(RedLongVisionDropOne redShortVisionDropOne) {controlFreaks = redShortVisionDropOne;}
+    public Constants(BlueLongVision blueLongVision) {controlFreaks = blueLongVision;}
     public Constants(Utilities utilities) {controlFreaks = utilities;}
 
-    public void ConceptAprilTag (TeleOpFieldOriented opmode) { controlFreaks = opmode;}
+    public double closed = 0.2;
+    public double open = 1;
+    public double halfopen = 0.49;
 
-        // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    DcMotor leftFront         = null;
-    DcMotor rightFront        = null;
-    DcMotor rightRear         = null;
-    DcMotor leftRear          = null;
-    public DcMotor slide_motor       = null; //deploys and retracts the elevator
-    public DcMotor e_tilt            = null; //controls the tilt angle of the elevator
-    DcMotor hanger            = null;
-//    public BNO055IMU imu      = null;      // Control/Expansion Hub IMU
-//    public BHI260IMU imu      = null;
+           // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
+    DcMotor leftFront               = null;
+    DcMotor rightFront              = null;
+    DcMotor rightRear               = null;
+    DcMotor leftRear                = null;
+    public DcMotor slide_motor      = null; //deploys and retracts the elevator
+    public DcMotor e_tilt           = null; //controls the tilt angle of the elevator
+    DcMotor hanger                  = null;
     YawPitchRollAngles orientation;
     AngularVelocity angularVelocity;
     public IMU imu;
-    public Servo claw         = null      ; //Claw servo
-    public Servo p_tilt              = null; //controls the tilt angle of the pixel delivery (claw)
-    Servo drone               = null; //release the drone
+    public Servo claw               = null      ; //Claw servo
+    public Servo p_tilt             = null; //controls the tilt angle of the pixel delivery (claw)
+    Servo drone                     = null; //release the drone
 
 //    // Initialize Touch Sensors
 //    // Touch sensor for tilt of elevator CH 0-1
@@ -225,39 +232,6 @@ public class Constants {
 
     static final double FEET_PER_METER = 3.28084;
 
-
-
-//    OpenCvCamera camera;
-//    AprilTagDetectionPipeline aprilTagDetectionPipeline;
-
-//    // Lens intrinsics
-//    // UNITS ARE PIXELS
-//    // NOTE: this calibration is for the C920 webcam at 800x448.
-//    // You will need to do your own calibration for other configurations!
-//    double fx = 578.272;
-//    double fy = 578.272;
-//    double cx = 402.145;
-//    double cy = 221.506;
-//
-//    // UNITS ARE METERS
-//    double tagsize = 0.166;
-//
-//    int LEFT    = 35; // Tag ID from the 36h11 family
-//    int MIDDLE  = 36;
-//    int RIGHT   = 37;
-//
-//    AprilTagDetection tagOfInterest = null;
-private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
-
-    /**
-     * The variable to store our instance of the AprilTag processor.
-     */
-    private AprilTagProcessor aprilTag;
-
-    /**
-     * The variable to store our instance of the vision portal.
-     */
-    private VisionPortal visionPortal;
     /**
      * Initialize all the robot's hardware.
      * This method must be called ONCE when the OpMode is initialized.
