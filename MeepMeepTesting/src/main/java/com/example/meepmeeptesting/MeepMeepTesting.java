@@ -11,24 +11,22 @@ public class MeepMeepTesting {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
 //        Pose2d startPose = new Pose2d(-36, -60, Math.toRadians(90));
+        //Provide the initial pose
+        Pose2d blueLongStart = new Pose2d(-36, 60, Math.toRadians(270));
+        Pose2d blueShortStart = new Pose2d(12, 60, Math.toRadians(270));
+        Pose2d redLongStart = new Pose2d(-36, -63, Math.toRadians(90));
+        Pose2d redShortStart = new Pose2d(12, -60, Math.toRadians(90));
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(52, 30, Math.toRadians(215), Math.toRadians(45), 14.35)
+                .setConstraints(52, 30, Math.toRadians(166), Math.toRadians(45), 14.47)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(-36, -60, Math.toRadians(90)))
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-//                                .forward(30)
-//                                .turn(Math.toRadians(90))
-                                  .lineTo(new Vector2d(-36,-24))
-                                .splineTo(new Vector2d(-64,-24),Math.toRadians(180))
-                                .turn(Math.toRadians(0))
-                                  .build());
+                        drive.trajectorySequenceBuilder(redLongStart)
+                                .lineToLinearHeading(new Pose2d(-39, -32, Math.toRadians(180)))
+
+                                .build());
+
+
 
 
 

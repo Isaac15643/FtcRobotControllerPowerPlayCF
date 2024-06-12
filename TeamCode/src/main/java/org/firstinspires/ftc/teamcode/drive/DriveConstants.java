@@ -27,7 +27,9 @@ import java.util.ArrayList;
  * and op modes themselves.
  */
 @Config
+
 public class DriveConstants {
+
 
     /*
      * These are motor constants that should be listed online for your motors.
@@ -58,7 +60,7 @@ public class DriveConstants {
      */
     public static double WHEEL_RADIUS = 1.8898; // in
     public static double GEAR_RATIO = 0.05208; // output (wheel) speed / input (motor) speed 1/19.2
-    public static double TRACK_WIDTH = 14.35; // in
+    public static double TRACK_WIDTH = 14.47; // in 6494 14.47
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
@@ -67,9 +69,9 @@ public class DriveConstants {
      * empirically tuned.
      */
 //    public static double kV = 0.016 / rpmToVelocity(MAX_RPM);
-    public static double kV = 0.0165;
-    public static double kA = 0.0015;
-    public static double kStatic = 0.035;
+    public static double kV = 0.018; // 6494 0.018
+    public static double kA = 0.0015; // 6494 0.0015
+    public static double kStatic = 0.09259; // 6494 0.09259
 
     /*
      * These values are used to generate the trajectories for you robot. To ensure proper operation,
@@ -78,9 +80,9 @@ public class DriveConstants {
      * small and gradually increase them later after everything is working. All distance units are
      * inches.
      */
-    public static double MAX_VEL = 52; //in/s
+    public static double MAX_VEL = 60; //in/s      orginal=52
     public static double MAX_ACCEL = 30; //in/s^2
-    public static double MAX_ANG_VEL = Math.toRadians(215); //degrees/s
+    public static double MAX_ANG_VEL = Math.toRadians(166.28); //degrees/s
     public static double MAX_ANG_ACCEL = Math.toRadians(45); //degrees/s^2
 
     /*
