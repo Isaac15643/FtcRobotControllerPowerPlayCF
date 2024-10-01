@@ -57,60 +57,7 @@ public class Commands {
         controlFreaks = opmode;
     }
 
-    private int scoreYExtension; //the encoder value for each of the scoring positions: L, M, H, T(Top)
-    private int e_tiltPickUp = 270; //The tilt position for picking up a pixel
-    private int e_tiltStowed = 0; //The tilt position for moving across the field
-    private double p_tiltPickup = 0; //The tilt position of the claw mechanism for picking up a pixel
-    private double p_tiltScore = 0.75; //The tilt position of the claw mechanism for scoring a pixel
-    public int slidePickup = -160;
-public int slideLow = -1300;
-public int slideMed = -1900;
-public int slideHigh = -2600;
-public int slideTop = -3100;
-public int e_tiltPickup = 270;
 
-    // **********  LOW Level driving functions.  ********************
-
-    public void clawCollect() { //Close the claw
-        constants.claw.setPosition(0);
-    }
-
-    public void clawRelease() { //Open the claw
-        constants.claw.setPosition(1);
-    }
-
-    public void p_tiltCollect() { //set the pixel tilt to the collect position
-        constants.p_tilt.setPosition(0);
-    }
-
-    public void p_tiltScore() { //set the pixel tilt to the scoring position
-        constants.p_tilt.setPosition(1);
-    }
-
-    public void getPixel() {
-        // set slide extension to pickup position
-        constants.e_tilt.setTargetPosition(slidePickup);
-        constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        constants.e_tilt.setPower(0.5);
-
-        // set elevator tilt and pixel tilt to pickup position (90 deg vertical)
-        constants.e_tilt.setTargetPosition((e_tiltPickUp));
-        constants.e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        constants.e_tilt.setPower(0.5);
-        constants.p_tilt.setPosition(0);
-        constants.claw.setPosition(1);
-
-//drop elevator down to get pixel
-        constants.slide_motor.setTargetPosition(0);
-        constants.claw.setPosition(0);
-        constants.e_tilt.setTargetPosition(0);
-
-        //Close the claw
-        clawCollect();
-
-        // set elevator tilt position to stowed position
-        constants.e_tilt.setTargetPosition(e_tiltStowed);
-    }
 
     //*************************************  AprilTag Stuff  ***************************
     /**
