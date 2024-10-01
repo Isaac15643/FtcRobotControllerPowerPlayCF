@@ -149,8 +149,9 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
 //            setManualExposure(1, 250);  // Use low exposure time to reduce motion blur 6
 
         // Wait for driver to press start
-        telemetry.addData("Camera preview on/off", "3 dots, Camera Stream");
-        telemetry.addData(">", "Touch Play to start OpMode");
+        {
+            telemetry.addData(">", "Touch Play to start OpMode");
+        }
         telemetry.update();
         waitForStart();
 

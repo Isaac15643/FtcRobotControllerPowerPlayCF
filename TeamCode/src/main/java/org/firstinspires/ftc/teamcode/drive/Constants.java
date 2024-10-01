@@ -36,9 +36,10 @@ import android.annotation.SuppressLint;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
@@ -46,16 +47,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.Auton.BlueLongVision;
-import org.firstinspires.ftc.teamcode.Auton.BlueShort;
-import org.firstinspires.ftc.teamcode.Auton.BlueShortVision;
-import org.firstinspires.ftc.teamcode.Auton.RedLong;
-import org.firstinspires.ftc.teamcode.Auton.RedShort;
-import org.firstinspires.ftc.teamcode.Auton.RedShortVision;
-import org.firstinspires.ftc.teamcode.Auton.RedLongVisionDropOne;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.openftc.apriltag.AprilTagDetection;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 
 
 /**
@@ -146,35 +139,21 @@ public class Constants {
     public LinearOpMode controlFreaks;   // gain access to methods in the calling OpMode.
     // Define a constructor that allows the OpMode to pass a reference to itself.
     public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;}
-    public Constants(RedShort redShort) {controlFreaks = redShort;}
-    public Constants(RedLong redLong) {controlFreaks = redLong;}
-    public Constants(BlueShort blueShort) {controlFreaks = blueShort;}
-//    public Constants(BlueLong blueLong) {controlFreaks = blueLong;}
-    public Constants(RedShortVision redShortVision) {controlFreaks = redShortVision;}
-    public Constants(BlueShortVision blueShortVision) {controlFreaks = blueShortVision;}
-    public Constants(RedLongVisionDropOne redShortVisionDropOne) {controlFreaks = redShortVisionDropOne;}
-    public Constants(BlueLongVision blueLongVision) {controlFreaks = blueLongVision;}
     public Constants(Utilities utilities) {controlFreaks = utilities;}
 
-    public double closed = 0.2;
-    public double open = 1;
-    public double halfopen = 0.49;
-
-           // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
+    // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
+    DcMotor slide_motor    = null;
     DcMotor leftFront               = null;
     DcMotor rightFront              = null;
     DcMotor rightRear               = null;
     DcMotor leftRear                = null;
-    public DcMotor slide_motor      = null; //deploys and retracts the elevator
-    public DcMotor e_tilt           = null; //controls the tilt angle of the elevator
     DcMotor hanger                  = null;
     YawPitchRollAngles orientation;
     AngularVelocity angularVelocity;
     public IMU imu;
-    public Servo claw               = null      ; //Claw servo
-    public Servo p_tilt             = null; //controls the tilt angle of the pixel delivery (claw)
-    Servo drone                     = null; //release the drone
-
+    // Define a variable for our color sensor
+    ColorSensor color;
+        // Get the color sensor from hardwareMap
 //    // Initialize Touch Sensors
 //    // Touch sensor for tilt of elevator CH 0-1
 //    TouchSensor e_tilt_stop;
@@ -186,13 +165,6 @@ public class Constants {
     private double robotHeading  = 0;
     private double headingOffset = 0;
     private double headingError  = 0;
-
-
-    private int scoreYExtension; //the encoder value for each of the scoring positions: L, M, H, T(Top)
-    private int e_tiltPickUp = 200; //The tilt position for picking up a pixel
-    private int e_tiltStowed = 100; //The tilt position for moving across the field
-    private double p_tiltPickup = 0; //The tilt position of the claw mechanism for picking up a pixel
-    private double p_tiltScore = 0.75; //The tilt position of the claw mechanism for scoring a pixel
 
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
@@ -244,28 +216,19 @@ public class Constants {
         rightFront  = controlFreaks.hardwareMap.get(DcMotor.class, "rightFront");
         leftRear    = controlFreaks.hardwareMap.get(DcMotor.class, "leftRear");
         rightRear   = controlFreaks.hardwareMap.get(DcMotor.class, "rightRear");
+//        slide_motorEx = controlFreaks.hardwareMap.get(DcMotor.class, "slide_motorEx");
         slide_motor = controlFreaks.hardwareMap.get(DcMotor.class, "slide_motor");
-        e_tilt      = controlFreaks.hardwareMap.get(DcMotor.class, "e_tilt");
+//            DcMotorEx slideMotorEx = (DcMotorEx) slide_motor;
+
         hanger      = controlFreaks.hardwareMap.get(DcMotor.class,"hanger");
-
-        e_tilt.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        e_tilt.setTargetPosition(0);
-        e_tilt.setPower(0.5);
-        e_tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
+        color = controlFreaks.hardwareMap.get(ColorSensor.class, "Color");
 
         hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hanger.setTargetPosition(0);
         hanger.setPower(0.5);
         hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-
-        slide_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        slide_motor.setTargetPosition(0);
-        slide_motor.setPower(1.0);
-        slide_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        slide_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Set motor directions
         leftFront.setDirection(DcMotor.Direction.FORWARD);
@@ -275,9 +238,7 @@ public class Constants {
 
 
         // Initialize Servos
-        claw        = controlFreaks.hardwareMap.get(Servo.class, "claw");
-        p_tilt      = controlFreaks.hardwareMap.get(Servo.class, "p_tilt");
-        drone       = controlFreaks.hardwareMap.get(Servo.class, "drone");
+
 
 
                   // define initialization values for IMU, and then initialize it.
@@ -297,7 +258,6 @@ public class Constants {
 //        imu = controlFreaks.hardwareMap.get(BHI260IMU.class, "imu");
 //        imu.initialize(parameters);
 
-        controlFreaks.telemetry.addData(">", "Hardware Initialized");
         controlFreaks.telemetry.update();
     }
 
@@ -434,41 +394,6 @@ public class Constants {
         rightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
     }
-
-    // **********  LOW Level driving functions.  ********************
-
-
-//    public void getCone() {
-//        tryToGetACone = true;
-//        //pick up cone
-//        slide_motor.setTargetPosition(450);
-//        Intake();
-//        ElapsedTime bugoutTimer = new ElapsedTime();
-//        bugoutTimer.reset();
-//
-//        while (touch.getState() && tryToGetACone) { // no cone collected yet
-//            counter += 1;
-//            // TODO: 12/15/2022
-////            if (bugoutTimer.time() >= 1500){ // something went wrong, just go park
-////                bugOutAndPark();
-////                return;
-////            }
-//            if (counter > 950){ // something went wrong, just go park
-//                bugOutAndPark();
-//                return;
-//            }
-//        }
-//        if (!touch.getState()) { // cone activates the switch
-//            tryToGetACone = false;
-//            Back.setPosition(.5);
-//            Front.setPosition(.5);
-//            slide_motor.setTargetPosition(slideMiddlePosition);//put slide up
-//            while (slide_motor.getCurrentPosition() < slideLowPosition){
-//                //let slide go up before moving to clear cone stack
-//            }
-//        }
-//    }
-
 
     private void sendTelemetry(boolean straight) {
 

@@ -37,6 +37,9 @@ public class Utilities extends LinearOpMode {
                 constants.hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 constants.hanger.setPower(1);
             }
+            if (gamepad2.left_trigger > 0.5) {
+
+            }
 
             if (gamepad2.right_bumper) {
                 constants.hanger.setTargetPosition(hangerTarget - 100);
@@ -45,21 +48,19 @@ public class Utilities extends LinearOpMode {
             }
 
             if (gamepad2.right_trigger > 0.5) {
-                constants.e_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 constants.slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 constants.hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
+            if (gamepad2.a) {
+            }
 
             if (gamepad2.b) {
-                constants.claw.setPosition(constants.closed);
             }
 
             if (gamepad2.x) {
-                constants.claw.setPosition(constants.open);
             }
 
             if (gamepad2.y) {
-                constants.claw.setPosition(constants.halfopen);
             }
 
             telemetry.update();
