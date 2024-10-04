@@ -27,13 +27,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.IMU;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -77,10 +77,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  */
 @TeleOp(name = "Sensor: IMU Orthogonal", group = "Sensor")
 @Disabled   // Comment this out to add to the OpMode list
-public class SensorIMUOrthogonal extends LinearOpMode
+public class IMU extends LinearOpMode
 {
     // The IMU sensor object
-    IMU imu;
+    com.qualcomm.robotcore.hardware.IMU imu;
 
     //----------------------------------------------------------------------------------------------
     // Main logic
@@ -90,7 +90,7 @@ public class SensorIMUOrthogonal extends LinearOpMode
 
         // Retrieve and initialize the IMU.
         // This sample expects the IMU to be in a REV Hub and named "imu".
-        imu = hardwareMap.get(IMU.class, "imu");
+        imu = hardwareMap.get(com.qualcomm.robotcore.hardware.IMU.class, "imu");
 
         /* Define how the hub is mounted on the robot to get the correct Yaw, Pitch and Roll values.
          *
@@ -115,7 +115,7 @@ public class SensorIMUOrthogonal extends LinearOpMode
 
         // Now initialize the IMU with this mounting orientation
         // Note: if you choose two conflicting directions, this initialization will cause a code exception.
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
+        imu.initialize(new com.qualcomm.robotcore.hardware.IMU.Parameters(orientationOnRobot));
 
         // Loop and update the dashboard
         while (!isStopRequested()) {

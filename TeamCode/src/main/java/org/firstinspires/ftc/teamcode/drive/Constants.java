@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.drive;
 import static java.lang.Thread.sleep;
 
 import android.annotation.SuppressLint;
+import android.graphics.RenderNode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -49,6 +50,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.openftc.apriltag.AprilTagDetection;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 
 
 /**
@@ -142,11 +145,12 @@ public class Constants {
     public Constants(Utilities utilities) {controlFreaks = utilities;}
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    DcMotor slide_motor    = null;
+    DcMotor slide_motor             = null;
     DcMotor leftFront               = null;
     DcMotor rightFront              = null;
     DcMotor rightRear               = null;
     DcMotor leftRear                = null;
+    DcMotor e_tilt                  = null;
     DcMotor hanger                  = null;
     YawPitchRollAngles orientation;
     AngularVelocity angularVelocity;
@@ -154,14 +158,17 @@ public class Constants {
     // Define a variable for our color sensor
     ColorSensor color;
         // Get the color sensor from hardwareMap
-//    // Initialize Touch Sensors
-//    // Touch sensor for tilt of elevator CH 0-1
-//    TouchSensor e_tilt_stop;
-//    // Touch sensor for lower limit of elevator CH 2-3
-//    TouchSensor e_stop;
-//    // Touch sensor for tilt upper limit of elevator CH 4-5
-//    TouchSensor e_tilt_zero;
 
+//    // Initialize Touch Sensors
+    // Touch sensor for tilt of elevator CH 0-1
+    TouchSensor e_tilt_stop;
+    // Touch sensor for lower limit of elevator CH 2-3
+    TouchSensor e_stop;
+    // Touch sensor for tilt upper limit of elevator CH 4-5
+    TouchSensor e_tilt_zero;
+//Initialize Servos
+
+    Servo drone = null;
     private double robotHeading  = 0;
     private double headingOffset = 0;
     private double headingError  = 0;
