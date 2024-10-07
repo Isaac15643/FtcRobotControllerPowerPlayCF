@@ -76,7 +76,7 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
         constants.init();
         telemetry.update();
-        constants.DRIVE_SPEED = 0.25;
+        constants.DRIVE_SPEED = 0.75;
         constants.TURN_SPEED = 0.50;
 
         YawPitchRollAngles orientation;
@@ -116,11 +116,11 @@ public class TeleOpFieldOriented extends LinearOpMode {
             telemetry.addData("state", state);
             telemetry.addData("gamepad2.right_stick_y", gamepad2.right_stick_y);
             telemetry.addData("gamepad2.left_stick_y", gamepad2.left_stick_y);
-//            telemetry.addData("slidemotor current", constants.slide_motor.getCurrent(CurrentUnit.MILLIAMPS));
-            telemetry.addData("green", constants.color.green());
-            telemetry.addData("red", constants.color.red());
-            telemetry.addData("blue", constants.color.blue());
-
+            telemetry.addData("slidemotor current", constants.slide_motor.getCurrent(CurrentUnit.MILLIAMPS));
+//            telemetry.addData("green", constants.color.green());
+//            telemetry.addData("red", constants.color.red());
+//            telemetry.addData("blue", constants.color.blue());
+            telemetry.update();
 
             driveTurn = -gamepad1.left_stick_x;
             gamepadXCoordinate = -gamepad1.right_stick_x; //this simply gives our x value relative to the driver
