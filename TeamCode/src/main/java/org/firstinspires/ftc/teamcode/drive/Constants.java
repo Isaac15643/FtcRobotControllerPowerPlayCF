@@ -145,7 +145,7 @@ public class Constants {
     public Constants(Utilities utilities) {controlFreaks = utilities;}
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    DcMotor slide_motor             = null;
+    DcMotorEx slide_motor           = null;
     DcMotor leftFront               = null;
     DcMotor rightFront              = null;
     DcMotor rightRear               = null;
@@ -156,7 +156,7 @@ public class Constants {
     AngularVelocity angularVelocity;
     public IMU imu;
     // Define a variable for our color sensor
-    ColorSensor color;
+//    ColorSensor color;
         // Get the color sensor from hardwareMap
 
 //    // Initialize Touch Sensors
@@ -224,11 +224,11 @@ public class Constants {
         leftRear    = controlFreaks.hardwareMap.get(DcMotor.class, "leftRear");
         rightRear   = controlFreaks.hardwareMap.get(DcMotor.class, "rightRear");
 //        slide_motorEx = controlFreaks.hardwareMap.get(DcMotor.class, "slide_motorEx");
-        slide_motor = controlFreaks.hardwareMap.get(DcMotor.class, "slide_motor");
+        slide_motor = controlFreaks.hardwareMap.get(DcMotorEx.class, "slide_motor");
 //            DcMotorEx slideMotorEx = (DcMotorEx) slide_motor;
 
         hanger      = controlFreaks.hardwareMap.get(DcMotor.class,"hanger");
-        color = controlFreaks.hardwareMap.get(ColorSensor.class, "Color");
+//        color = controlFreaks.hardwareMap.get(ColorSensor.class, "Color");
 
         hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hanger.setTargetPosition(0);
@@ -240,7 +240,7 @@ public class Constants {
         // Set motor directions
         leftFront.setDirection(DcMotor.Direction.FORWARD);
         leftRear.setDirection(DcMotor.Direction.FORWARD);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        rightFront.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
 
 
@@ -253,8 +253,8 @@ public class Constants {
 //        parameters.angleUnit            = BNO055IMU.AngleUnit.DEGREES;
 //        parameters.accelUnit            = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         //TODO:
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.DOWN;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
@@ -264,7 +264,7 @@ public class Constants {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 //        imu = controlFreaks.hardwareMap.get(BHI260IMU.class, "imu");
 //        imu.initialize(parameters);
-
+        controlFreaks.telemetry.addLine("init complete");
         controlFreaks.telemetry.update();
     }
 
