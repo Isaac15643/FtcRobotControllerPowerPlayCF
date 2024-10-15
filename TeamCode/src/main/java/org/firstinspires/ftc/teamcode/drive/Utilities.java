@@ -52,10 +52,10 @@ public class Utilities extends LinearOpMode {
             boolean tryingToScore = false;
 
             if (gamepad1.right_bumper) {
-                constants.hanger.setTargetPosition(-1200);//release hanger
+//                constants.hanger.setTargetPosition(-1200);//release hanger
             }
             if (gamepad1.left_bumper){
-                constants.hanger.setTargetPosition(15000);//bring down hanger
+//                constants.hanger.setTargetPosition(15000);//bring down hanger
             }
             if (gamepad1.a) {
                 constants.hanger.setTargetPosition(constants.hanger.getCurrentPosition() + 900);//sets hanger
@@ -104,7 +104,7 @@ public class Utilities extends LinearOpMode {
             }
 
             if (gamepad2.right_trigger > 0.5) {
-                constants.slide_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                constants.slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 constants.hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
             if (gamepad2.a) {
@@ -121,7 +121,7 @@ public class Utilities extends LinearOpMode {
                 } else {
                     slideTarget = slideMed;
                 }
-                constants.slide_motor.setTargetPosition(slideTarget);
+                constants.slide.setTargetPosition(slideTarget);
 
             } else if (gamepad2.right_stick_y > 0.2) {
                 if (slideTarget < -10) {
@@ -129,7 +129,7 @@ public class Utilities extends LinearOpMode {
                 } else {
                     slideTarget = -10;
                 }
-                constants.slide_motor.setTargetPosition(slideTarget);
+                constants.slide.setTargetPosition(slideTarget);
             }
 
             if (gamepad2.y) {
@@ -141,7 +141,6 @@ public class Utilities extends LinearOpMode {
                 } else {
                     e_tiltTarget = e_tiltStowed;
                 }
-                constants.e_tilt.setTargetPosition(e_tiltTarget);
 
             } else if (gamepad2.left_stick_y < -0.2) {
                 if (e_tiltTarget <= e_tiltPickUp) {
@@ -149,22 +148,18 @@ public class Utilities extends LinearOpMode {
                 } else {
                     e_tiltTarget = e_tiltPickUp;
                 }
-                constants.e_tilt.setTargetPosition(e_tiltTarget);
             }
 
             //launch drone
             if (gamepad2.dpad_up) {
-                constants.drone.setPosition(0);
             }
 
             //Reset the drone hammer
             if (gamepad2.dpad_down) {
-                constants.drone.setPosition(1);
             }
 
             //Set the drone
             if (gamepad2.dpad_left) {
-                constants.drone.setPosition(0.5);
             }
             telemetry.update();
         }

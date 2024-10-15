@@ -32,13 +32,11 @@ package org.firstinspires.ftc.teamcode.drive;
 import static java.lang.Thread.sleep;
 
 import android.annotation.SuppressLint;
-import android.graphics.RenderNode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
@@ -49,7 +47,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.openftc.apriltag.AprilTagDetection;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
@@ -145,13 +143,14 @@ public class Constants {
     public Constants(Utilities utilities) {controlFreaks = utilities;}
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    DcMotorEx slide_motor           = null;
+    DcMotorEx slide = null;
     DcMotor leftFront               = null;
     DcMotor rightFront              = null;
     DcMotor rightRear               = null;
     DcMotor leftRear                = null;
-    DcMotor e_tilt                  = null;
     DcMotor hanger                  = null;
+    DcMotorEx collector             = null;
+    DcMotorEx c_tilt                = null;
     YawPitchRollAngles orientation;
     AngularVelocity angularVelocity;
     public IMU imu;
@@ -160,15 +159,14 @@ public class Constants {
         // Get the color sensor from hardwareMap
 
 //    // Initialize Touch Sensors
-    // Touch sensor for tilt of elevator CH 0-1
-    TouchSensor e_tilt_stop;
-    // Touch sensor for lower limit of elevator CH 2-3
-    TouchSensor e_stop;
-    // Touch sensor for tilt upper limit of elevator CH 4-5
-    TouchSensor e_tilt_zero;
+    TouchSensor sll;     // Touch sensor for slide lower limit CH 0-(1)
+    TouchSensor cll;     // Touch sensor for collector lower limit CH 2-(3)
+
 //Initialize Servos
 
-    Servo drone = null;
+    Servo bucket = null;
+    Servo hanger_tilt = null;
+
     private double robotHeading  = 0;
     private double headingOffset = 0;
     private double headingError  = 0;
@@ -184,12 +182,20 @@ public class Constants {
     private int     leftRearTarget      = 0;
     private int     rightFrontTarget    = 0;
     private int     rightRearTarget     = 0;
-    boolean         bugOut          = false;
-    boolean         tryToGetACone   = false;
+    boolean         delivery            = false;
     int             counter             = 0;
+    int             collectorDown       = 0;
+    int             collectorUp         = 200;
+    int             highBasket          = 2000;
+    int             lowBasket           = 500;
+    int             highBar             = 1000;
+    int             lowBar              = 250;
+    int             offset              = 200;
     boolean         START_LEFT;
     double          TURN_SPEED;
     double          DRIVE_SPEED;
+    double          overload            = 12.0;
+    double          c_tiltPower         = 0.1;
 
     // Define Drive constants.  Make them public so they CAN be used by the calling OpMode
     static final double     COUNTS_PER_MOTOR_REV    = 28.0 ;     // REV HD Hex
@@ -223,19 +229,30 @@ public class Constants {
         rightFront  = controlFreaks.hardwareMap.get(DcMotor.class, "rightFront");
         leftRear    = controlFreaks.hardwareMap.get(DcMotor.class, "leftRear");
         rightRear   = controlFreaks.hardwareMap.get(DcMotor.class, "rightRear");
-//        slide_motorEx = controlFreaks.hardwareMap.get(DcMotor.class, "slide_motorEx");
-        slide_motor = controlFreaks.hardwareMap.get(DcMotorEx.class, "slide_motor");
-//            DcMotorEx slideMotorEx = (DcMotorEx) slide_motor;
-
+        slide       = controlFreaks.hardwareMap.get(DcMotorEx.class, "slide");
         hanger      = controlFreaks.hardwareMap.get(DcMotor.class,"hanger");
+        collector   = controlFreaks.hardwareMap.get(DcMotorEx.class, "collector");
+        c_tilt      = controlFreaks.hardwareMap.get(DcMotorEx.class, "c_tilt");
+
 //        color = controlFreaks.hardwareMap.get(ColorSensor.class, "Color");
 
-        hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hanger.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         hanger.setTargetPosition(0);
         hanger.setPower(0.5);
         hanger.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        slide_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        c_tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        c_tilt.setTargetPosition(0);
+        c_tilt.setPower(0.1);
+        c_tilt.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+
+        collector.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
+        slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slide.setTargetPosition(0);
+        slide.setPower(0.5);
+        slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Set motor directions
         leftFront.setDirection(DcMotor.Direction.FORWARD);
