@@ -37,6 +37,8 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
@@ -46,6 +48,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.Auton.BlueLeft;
 import org.openftc.apriltag.AprilTagDetection;
 
 import com.qualcomm.robotcore.hardware.Servo;
@@ -141,6 +144,7 @@ public class Constants {
     // Define a constructor that allows the OpMode to pass a reference to itself.
     public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;}
     public Constants(Utilities utilities) {controlFreaks = utilities;}
+    public Constants(BlueLeft blueLeft) {controlFreaks = blueLeft;}
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
     DcMotorEx slide = null;
@@ -160,12 +164,12 @@ public class Constants {
 
 //    // Initialize Touch Sensors
     TouchSensor sll;     // Touch sensor for slide lower limit CH 0-(1)
-    TouchSensor cll;     // Touch sensor for collector lower limit CH 2-(3)
+    TouchSensor cll = null;     // Touch sensor for collector lower limit CH 2-(3)
 
 //Initialize Servos
 
-    Servo bucket = null;
-    Servo hanger_tilt = null;
+    Servo bucket = null; //ch0
+    Servo hangerTilt = null; //ch1
 
     private double robotHeading  = 0;
     private double headingOffset = 0;
@@ -183,19 +187,21 @@ public class Constants {
     private int     rightFrontTarget    = 0;
     private int     rightRearTarget     = 0;
     boolean         delivery            = false;
+    boolean         collecting          = false;
     int             counter             = 0;
     int             collectorDown       = 0;
-    int             collectorUp         = 200;
+    int             collectorUp         = 0;
     int             highBasket          = 2000;
     int             lowBasket           = 500;
     int             highBar             = 1000;
     int             lowBar              = 250;
-    int             offset              = 200;
+    int             offset              = 267;
     boolean         START_LEFT;
     double          TURN_SPEED;
     double          DRIVE_SPEED;
-    double          overload            = 12.0;
+    double          overload            = 4000;
     double          c_tiltPower         = 0.1;
+    double          overloadHigh        = 0;
 
     // Define Drive constants.  Make them public so they CAN be used by the calling OpMode
     static final double     COUNTS_PER_MOTOR_REV    = 28.0 ;     // REV HD Hex
@@ -225,14 +231,18 @@ public class Constants {
      */
     public void init()    {
         // Initialize Motors (note: need to use reference to actual OpMode).
-        leftFront   = controlFreaks.hardwareMap.get(DcMotor.class, "leftFront");
-        rightFront  = controlFreaks.hardwareMap.get(DcMotor.class, "rightFront");
-        leftRear    = controlFreaks.hardwareMap.get(DcMotor.class, "leftRear");
-        rightRear   = controlFreaks.hardwareMap.get(DcMotor.class, "rightRear");
-        slide       = controlFreaks.hardwareMap.get(DcMotorEx.class, "slide");
-        hanger      = controlFreaks.hardwareMap.get(DcMotor.class,"hanger");
-        collector   = controlFreaks.hardwareMap.get(DcMotorEx.class, "collector");
-        c_tilt      = controlFreaks.hardwareMap.get(DcMotorEx.class, "c_tilt");
+        leftFront   = controlFreaks.hardwareMap.get(DcMotorEx.class, "leftFront");  //ch2
+        rightFront  = controlFreaks.hardwareMap.get(DcMotorEx.class, "rightFront"); //ch0
+        leftRear    = controlFreaks.hardwareMap.get(DcMotorEx.class, "leftRear"); //ch3
+        rightRear   = controlFreaks.hardwareMap.get(DcMotorEx.class, "rightRear"); //ch1
+        slide       = controlFreaks.hardwareMap.get(DcMotorEx.class, "slide"); //eh0
+        hanger      = controlFreaks.hardwareMap.get(DcMotorEx.class, "hanger"); //eh1
+        collector   = controlFreaks.hardwareMap.get(DcMotorEx.class, "collector"); //eh3
+        c_tilt      = controlFreaks.hardwareMap.get(DcMotorEx.class, "c_tilt"); //eh2
+        bucket      = controlFreaks.hardwareMap.get(Servo.class, "bucket"); //ch0
+        hangerTilt  = controlFreaks.hardwareMap.get(Servo.class, "hangerTilt"); //ch1
+        cll         = controlFreaks.hardwareMap.get(TouchSensor.class, "cll");
+        sll         = controlFreaks.hardwareMap.get(TouchSensor.class, "sll");
 
 //        color = controlFreaks.hardwareMap.get(ColorSensor.class, "Color");
 
@@ -259,6 +269,7 @@ public class Constants {
         leftRear.setDirection(DcMotor.Direction.FORWARD);
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         rightRear.setDirection(DcMotor.Direction.REVERSE);
+        slide.setDirection(DcMotorEx.Direction.REVERSE);
 
 
         // Initialize Servos
@@ -281,6 +292,7 @@ public class Constants {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 //        imu = controlFreaks.hardwareMap.get(BHI260IMU.class, "imu");
 //        imu.initialize(parameters);
+        imu.resetYaw();
         controlFreaks.telemetry.addLine("init complete");
         controlFreaks.telemetry.update();
     }
