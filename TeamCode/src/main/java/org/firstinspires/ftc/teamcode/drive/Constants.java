@@ -46,6 +46,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.Auton.BlueLeft;
+import org.firstinspires.ftc.teamcode.Auton.BlueRight;
+import org.firstinspires.ftc.teamcode.Auton.RedLeft;
+import org.firstinspires.ftc.teamcode.Auton.RedRight;
 import org.openftc.apriltag.AprilTagDetection;
 
 import com.qualcomm.robotcore.hardware.Servo;
@@ -141,6 +145,11 @@ public class Constants {
     // Define a constructor that allows the OpMode to pass a reference to itself.
     public Constants(TeleOpFieldOriented opmode) {controlFreaks = opmode;}
     public Constants(Utilities utilities) {controlFreaks = utilities;}
+    public Constants(BlueLeft blueLeft) {controlFreaks = blueLeft;}
+    public Constants(BlueRight blueRight) {controlFreaks = blueRight;}
+    public Constants(RedLeft redLeft) {controlFreaks = redLeft;}
+    public Constants(RedRight redRight) {controlFreaks = redRight;}
+
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
     DcMotorEx slide = null;
@@ -154,6 +163,7 @@ public class Constants {
     YawPitchRollAngles orientation;
     AngularVelocity angularVelocity;
     public IMU imu;
+    Servo bucket                    = null;
     // Define a variable for our color sensor
 //    ColorSensor color;
         // Get the color sensor from hardwareMap

@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Auton;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.Commands;
@@ -14,7 +13,7 @@ import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 @Autonomous
 //@Disabled
 
-public class BlueLeft extends LinearOpMode {
+public class RedLeft extends LinearOpMode {
 
     private org.firstinspires.ftc.teamcode.drive.Utilities Utilities;
     Constants constants = new Constants(this);
@@ -30,10 +29,12 @@ public class BlueLeft extends LinearOpMode {
         Pose2d RedLeftStart = new Pose2d(-36, -63, Math.toRadians(90));
         Pose2d RedRightStart = new Pose2d(12, -60, Math.toRadians(90));
 
-        //tell the robot where it starts
-        drivetrain.setPoseEstimate(BlueLeftStart);
+        Pose2d startPose = new Pose2d(36, 60, Math.toRadians(270)); //tell the robot where it starts
 
-        TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(BlueLeftStart)
+        drivetrain.setPoseEstimate(startPose);
+
+        TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(startPose)
+                .lineToLinearHeading(RedLeftStart)
                 .lineTo(new Vector2d(36,36))
 
                 .build();
