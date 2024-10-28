@@ -25,18 +25,15 @@ public class BlueLeft extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         MecanumDrive drivetrain = new MecanumDrive(hardwareMap);
 
-        Pose2d BlueLeftStart = new Pose2d(36, 60, Math.toRadians(270));
-        Pose2d BlueRightStart = new Pose2d(12, 60, Math.toRadians(270));
-        Pose2d RedLeftStart = new Pose2d(-36, -63, Math.toRadians(90));
-        Pose2d RedRightStart = new Pose2d(12, -60, Math.toRadians(90));
 
-        //tell the robot where it starts
-        drivetrain.setPoseEstimate(BlueLeftStart);
+        Pose2d startPose = new Pose2d(36, 60, Math.toRadians(270)); //tell the robot where it starts
 
-        TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(BlueLeftStart)
+        drivetrain.setPoseEstimate(startPose);
+
+        TrajectorySequence tragic = drivetrain.trajectorySequenceBuilder(startPose)
                 .lineTo(new Vector2d(36,36))
-
                 .build();
+
         waitForStart();
 
         if (!isStopRequested()) {
