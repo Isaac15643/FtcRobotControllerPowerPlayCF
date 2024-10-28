@@ -99,6 +99,10 @@ public class MecanumDrive extends com.acmerobotics.roadrunner.drive.MecanumDrive
 //                DriveConstants.LOGO_FACING_DIR, DriveConstants.USB_FACING_DIR));
 //        imu.initialize(parameters);
 
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");//ch2
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");//ch0
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");//ch3
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");//ch1
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 

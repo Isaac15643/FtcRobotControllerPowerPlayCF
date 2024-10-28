@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
 @TeleOp(name="Utilities", group="Linear Opmode")
 public class Utilities extends LinearOpMode {
 
@@ -20,11 +22,25 @@ public class Utilities extends LinearOpMode {
         int slideTarget = 0;
         int e_tiltTarget = 0;
 
+        double MEAbase = 0;
+        double MEAcounter = 0;
+        double MEA = 0;
+        double MEAout = 0;
+
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
         while (opModeIsActive()) {
 
+            if (MEAcounter < 9) {
+                MEA = MEA + constants.collector.getCurrent(CurrentUnit.MILLIAMPS);
+                MEAcounter += 1;
+            } else {
+                MEAout = MEA * 0.1;
+                MEAcounter = 0;
+            }
+
+            telemetry.addData("collector AVG currrent", MEAout);
             telemetry.addLine("Gamepad 1 Right Bumper to release hook");
             telemetry.addLine("Gamepad 1 Left Bumper to lower hook");
             telemetry.addLine("Gamepad 1 A to set hook");
@@ -40,6 +56,8 @@ public class Utilities extends LinearOpMode {
             telemetry.addData("Hanger Encoder", hangerTarget);
             telemetry.addData("right stick y", gamepad1.right_stick_y);
             telemetry.addData("left stick y", gamepad1.left_stick_y);
+            telemetry.addLine("gamepad 2 left stick manual hanger");
+
 
             final int e_tiltPickUp = 0; //The tilt position for picking up a pixel 320 for 5618 and 6494
             final int e_tiltStowed = -475; //The tilt position for moving across the field -30
@@ -50,6 +68,7 @@ public class Utilities extends LinearOpMode {
             final int slideHigh = -2600;
             final int slideTop = -3100;
             boolean tryingToScore = false;
+
 
             if (gamepad1.right_bumper) {
 //                constants.hanger.setTargetPosition(-1200);//release hanger
@@ -62,20 +81,24 @@ public class Utilities extends LinearOpMode {
             }
             if (gamepad1.right_stick_y < -0.2) {
                 constants.rightFront.setPower(1.0);
+            } else {
                 constants.rightFront.setPower(0);
 
             }
             if (gamepad1.right_stick_y > 0.2) {
                 constants.rightRear.setPower(1.0);
+            } else {
                 constants.rightRear.setPower(0);
 
             }
             if (gamepad1.left_stick_y < -0.2) {
                 constants.leftFront.setPower(1.0);
+            } else {
                 constants.leftFront.setPower(0);
             }
             if (gamepad1.left_stick_y > 0.2) {
                 constants.leftRear.setPower(1.0);
+            } else {
                 constants.leftRear.setPower(0);
             }
 
@@ -100,6 +123,7 @@ public class Utilities extends LinearOpMode {
                 constants.hanger.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
             if (gamepad2.a) {
+
             }
 
             if (gamepad2.b) {
@@ -128,16 +152,21 @@ public class Utilities extends LinearOpMode {
             }
 
             if (gamepad2.left_stick_y > 0.2) { //tilt slide manually
+
             }
+
+            else if (gamepad2.left_stick_y < -0.2) {
 
             }
 
             //launch drone
             if (gamepad2.dpad_up) {
+                constants.slide.setTargetPosition(constants.slide.getCurrentPosition() + 100);
             }
 
             //Reset the drone hammer
             if (gamepad2.dpad_down) {
+                constants.collector.setPower(1.0);
             }
 
             //Set the drone
