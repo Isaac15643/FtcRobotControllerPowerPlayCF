@@ -24,8 +24,6 @@ public class TeleOpFieldOriented extends LinearOpMode {
     private org.firstinspires.ftc.teamcode.drive.Utilities Utilities;
     Constants constants = new Constants(this);
     Commands commands;
-    //initalize touch sensors
-
     Orientation angles;
 
     private double left_front_power;
@@ -156,75 +154,78 @@ public class TeleOpFieldOriented extends LinearOpMode {
             if (gamepad1.left_stick_y < -0.2) {
 
             }
-        }
-        if (gamepad1.left_bumper) { // slow down for precision
 
-        }
+            if (gamepad1.left_bumper) { // slow down for precision
 
-        if (gamepad1.x) {
+            }
 
-        }
+            if (gamepad1.x) {
 
-        if (gamepad1.a) {
-        }
+            }
 
-        if (gamepad1.b) {
-        }
+            if (gamepad1.a) {
+            }
 
-        //*****************************     Gamepad 2     **************************************
+            if (gamepad1.b) {
+            }
+
+            //*****************************     Gamepad 2     **************************************
 //             collection sequence
 //            start by spinning collector then drop c_tilt when collector current is 400+ stop collector and raise arm
-        if (gamepad2.a) {
-            constants.collector.setPower(1.0);
-//            constants.c_tilt.setTargetPosition(constants.collectorDown - constants.offset);
-//            constants.c_tilt.setPower(constants.c_tiltPower);
-//            if (constants.cll.isPressed()) {
-//                constants.offset = constants.c_tilt.getCurrentPosition();
-//            }
-//            if (constants.c_tilt.getCurrent(CurrentUnit.MILLIAMPS) > constants.overload) {
-//                constants.c_tilt.setPower(0.0);
-//            }
-//            if (constants.collector.getCurrent(CurrentUnit.MILLIAMPS) > constants.overload) {// we have collected a sample
-//                constants.collector.setPower(0.0);
-//                constants.c_tilt.setTargetPosition(constants.collectorUp);
-//                constants.c_tilt.setPower(constants.c_tiltPower);
-//
-//            }
+            if (gamepad2.a) {
+                constants.collector.setPower(1.0);
+                constants.c_tilt.setTargetPosition(constants.collectorDown - constants.offset);
+                constants.c_tilt.setPower(constants.c_tiltPower);
+                if (constants.cll.isPressed()) {
+                    constants.offset = constants.c_tilt.getCurrentPosition();
+                }
+                if (constants.c_tilt.getCurrent(CurrentUnit.MILLIAMPS) > constants.overload) {
+                    constants.c_tilt.setPower(0.0);
+                }
+                if (constants.collector.getCurrent(CurrentUnit.MILLIAMPS) > constants.overload) {// we have collected a sample
+                    constants.collector.setPower(0.0);
+                    constants.c_tilt.setTargetPosition(constants.collectorUp);
+                    constants.c_tilt.setPower(constants.c_tiltPower);
 
-        }
+                }
+            }
 
-        if (gamepad2.y) {
+            if (gamepad2.y) {
 
-        }
+            }
 
-        if (gamepad2.x) {
+            if (gamepad2.x) {
 
-        }
+            }
 
-        if (gamepad2.b) {
+            if (gamepad2.b) {
 
-        }
+            }
 
-        if (gamepad2.left_trigger > 0.5) {
+            if (gamepad2.left_trigger > 0.5) {
 
-        }
+            }
 
-        if (gamepad2.right_stick_y < -0.2) { //
+            if (gamepad2.right_stick_y < -0.2) { //
 
-        }
-        if (gamepad2.right_bumper) { //score sequence for high basket
+            }
+
+            //score sequence for high basket
+            if (gamepad2.right_bumper) {
 //            set slide position
-            constants.slide.setTargetPosition(constants.highBasket);
+                constants.slide.setTargetPosition(constants.highBasket);
 //            set delivery to true
-            constants.delivery = true;
+                constants.delivery = true;
 //            reverse collector
-            constants.collector.setPower(-1);
-//            dump
-        }
-        if (Math.abs(constants.slide.getCurrentPosition() - constants.highBasket) < 100) {
-            constants.bucket.setPosition(1);
+                constants.collector.setPower(-1);
+            }
+//             if delivery is true, dump when slide reaches target
 
-        }
+                if (constants.delivery && Math.abs(constants.slide.getCurrentPosition() - constants.highBasket) < 100) {
+                    constants.bucket.setPosition(1);
+                    constants.delivery = false;
+                }
+
 
 
 //            if (gamepad2.left_stick_y > 0.2) { //
@@ -241,7 +242,8 @@ public class TeleOpFieldOriented extends LinearOpMode {
 
 
 //            if (gamepad2.left_bumper) {
-        //do something
+            //do something
+        }
     }
 }
 
